@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include "calculatorservice.h"
+#include "calculatorService.h"
 
 class CompNode : public QObject
 {
