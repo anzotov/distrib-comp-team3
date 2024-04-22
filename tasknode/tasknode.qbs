@@ -11,6 +11,9 @@ QtApplication {
 
     consoleApplication: true
     files: [
+        "../common/logMessageHandler.cpp",
+        "tasknode.h",
+        "tasknode.cpp",
         "main.cpp",
     ]
 
