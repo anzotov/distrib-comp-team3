@@ -12,6 +12,8 @@ QtApplication {
     consoleApplication: true
     files: [
         "main.cpp",
+        "calculatorService.h",
+        "calculatorService.cpp",
     ]
 
     Group {     // Properties for the produced executable
@@ -19,4 +21,6 @@ QtApplication {
         qbs.install: true
         qbs.installDir: "bin"
     }
+
+    Depends { name: "Qt.qml" }
 }
