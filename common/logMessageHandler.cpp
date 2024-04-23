@@ -23,7 +23,7 @@ void logMessageHandler(QtMsgType type, const QMessageLogContext &context, const 
         }
         break;
     case QtInfoMsg:
-        if (logMessageLevel.verbose)
+        if (logMessageLevel.verbose || logMessageLevel.debug)
         {
             fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
         }
