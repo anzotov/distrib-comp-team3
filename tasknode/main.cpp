@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
     }
 
     TaskNode taskNode(&app, split[0], split[1], input, output);
+    QObject::connect(&taskNode, &TaskNode::taskDone, &app, [&app](bool success)
+                     { app.exit(success ? 0 : 1); });
 
     return app.exec();
 }

@@ -12,6 +12,8 @@ QtApplication {
     consoleApplication: true
     files: [
         "../common/logMessageHandler.cpp",
+        "../common/transportService.h",
+        "../common/transportService.cpp",
         "tasknode.h",
         "tasknode.cpp",
         "main.cpp",
@@ -22,4 +24,6 @@ QtApplication {
         qbs.install: true
         qbs.installDir: "bin"
     }
+
+    Depends {name: "Qt.network" }
 }
