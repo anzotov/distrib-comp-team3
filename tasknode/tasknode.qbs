@@ -17,10 +17,6 @@ QtApplication {
         "tasknode.h",
         "tasknode.cpp",
         "main.cpp",
-        "../compnode/calculatorService.h",
-        "../compnode/calculatorService.cpp",
-        "../compnode/compnode.h",
-        "../compnode/compnode.cpp",
     ]
 
     Group {     // Properties for the produced executable
@@ -29,6 +25,5 @@ QtApplication {
         qbs.installDir: "bin"
     }
 
-    Depends { name: "Qt.network" }
-    Depends { name: "Qt.qml" }
+    Depends {name: "Qt.network" }
 }
