@@ -12,7 +12,7 @@ class CalculatorService : public QObject
 
 public:
     explicit CalculatorService(QObject *parent = nullptr);
-    QStringList Caculate(const CalcTask &task);
+    QStringList calculate(const CalcTask &task);
 
 private:
     QJSEngine m_jsEngine;

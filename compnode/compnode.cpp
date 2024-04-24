@@ -1,15 +1,16 @@
-#include <QObject>
 #include "compnode.h"
+
+#include <QObject>
+#include "QtDebug"
 
 CompNode::CompNode(QObject *parent) : QObject(parent)
 {
-    connect(this, &CompNode::taskCompleted, this, [=](const Result& result) {
-qDebug() << "Task completed. Result:" << result;
-});
+    connect(this, &CompNode::taskCompleted, this, [=](const QStringList &result)
+            { qDebug() << "Task completed. Result:" << result; });
 }
 
-void CompNode::processTask(const Task& task)
+void CompNode::processTask(const CalcTask &task)
 {
-    Result result = calculatorService.calculate(task);
+    auto result = m_calculatorService.calculate(task);
     emit taskCompleted(result);
 }

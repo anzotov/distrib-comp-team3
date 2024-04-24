@@ -12,18 +12,19 @@ class TransportService : public QObject
 {
     Q_OBJECT
 public:
-    explicit TransportService(QObject *parent = nullptr) : QObject(parent);
+    explicit TransportService(QObject *parent = nullptr);
 signals:
     void newConnection(const QHostAddress IP, const quint64 port, const quint64 socketNum);
-    void receiveMainTask(const CalcTask& task, const quint64 socketNum);
-    void receiveResultTask(const QStringList& result, const quint64 socketNum);
+    void receiveMainTask(const CalcTask &task, const quint64 socketNum);
+    void receiveMainResult(const QStringList &result, const quint64 socketNum);
 public slots:
     void openConnection(const QHostAddress IP, const quint64 port);
     void closeConnection(const quint64 socketNum);
-    void sendMainTask(const CalcTask& task, const quint64 socketNum);
-    void sendMainResult(const QStringList& result, const quint64 socketNum);
+    void sendMainTask(const CalcTask &task, const quint64 socketNum);
+    void sendMainResult(const QStringList &result, const quint64 socketNum);
     void startListening(const quint64 port);
-    void stopListening(const quint64 port);
+    void stopListening();
+
 private:
     QTcpServer m_server;
     QVector<QPointer<QTcpSocket>> m_socket;

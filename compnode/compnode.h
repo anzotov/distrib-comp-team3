@@ -1,7 +1,9 @@
 #pragma once
 
-#include <QObject>
+#include "../common/calcTask.h"
 #include "calculatorService.h"
+#include <QObject>
+#include <QStringList>
 
 class CompNode : public QObject
 {
@@ -11,11 +13,11 @@ public:
     explicit CompNode(QObject *parent = nullptr);
 
 public slots:
-    void processTask(const Task& task);
+    void processTask(const CalcTask& task);
 
 signals:
-    void taskCompleted(const Result& result);
+    void taskCompleted(const QStringList& result);
 
 private:
-    CalculatorService calculatorService;
+    CalculatorService m_calculatorService;
 };

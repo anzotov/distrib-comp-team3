@@ -9,7 +9,7 @@ CalculatorService::CalculatorService(QObject *parent) : QObject(parent)
     m_jsEngine.globalObject().setProperty("ctg", m_jsEngine.evaluate("f=function(x) { return 1/Math.tan(x); }"));
 }
 
-QStringList CalculatorService::Caculate(const CalcTask &task)
+QStringList CalculatorService::calculate(const CalcTask &task)
 {
     auto result = QStringList();
 
