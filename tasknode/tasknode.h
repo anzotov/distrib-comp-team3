@@ -1,32 +1,63 @@
 #pragma once
 
+#include "taskProvider.h"
+
 #include "../common/calcTask.h"
-#include "../common/transportService.h"
+#include "../common/calcResult.h"
+#include "../common/transportServiceBase.h"
 
 #include <QObject>
 #include <QString>
-#include <QTextStream>
+#include <optional>
 
 class TaskNode final : public QObject
 {
     Q_OBJECT
 
 public:
-    TaskNode(QObject *parent,
-             const QString &ip, const QString &port, const QString &input, const QString &output);
+    TaskNode(TransportServiceBase *transportServiceBase,
+             TaskProvider *taskProvider,
+             const QString &peerInfo,
+             int connectRetries = 10,
+             int reconnectTime = 1000,
+             QObject *parent = nullptr);
     ~TaskNode();
+    void start();
+    void stop();
 
 signals:
-    void taskDone(bool success);
-
-private slots:
-    void receiveMainResult(const QStringList &result, const quint64 socketNum);
-    void newConnection(const QHostAddress IP, const quint64 port, const quint64 socketNum);
+    void stopped(bool success);
 
 private:
-    void parseInput(const QString &input);
-    void openOutput(const QString &output);
-    QTextStream *m_outputSteam = nullptr;
-    CalcTask m_calcTask;
-    TransportService m_transportService;
+    enum class State
+    {
+        Stopped,
+        Started,
+        TaskRequested,
+        ConnectionRequested,
+        TaskSent,
+        FormatRequested,
+    };
+
+    void onReceivedCalcResult(const TransportServiceBase::PeerHandlerType peerHandler,
+                              const CalcResult result);
+    void onNewPeer(const TransportServiceBase::PeerHandlerType peerHandler);
+    void onConnectError(const QString &peerInfo);
+    void onPeerDiconnected(const TransportServiceBase::PeerHandlerType peerHandler);
+    void onTaskLoadDone(const CalcTask task);
+    void onTaskLoadError();
+    void onNoTasksAvailable();
+    void onResultFormatDone();
+    void onResultFormatError(CalcResult result);
+
+    TransportServiceBase *m_transportServiceBase = nullptr;
+    TaskProvider *m_taskProvider = nullptr;
+    
+    State m_state = State::Stopped;
+    const QString m_peerInfo;
+    const int m_maxConnectAttempts = 1;
+    const int m_reconnectTime = 1000;
+    int m_connectAttempt = 0;
+    std::optional<CalcTask> m_task;
+    std::optional<TransportServiceBase::PeerHandlerType> m_peerHandler;
 };
