@@ -26,5 +26,6 @@ public:
     virtual void sendCalcResult(const PeerHandlerType &peerHandler, const CalcResult &result) = 0;
     virtual void connectPeer(const QString &peerInfo) = 0;
     virtual void disconnectPeer(const PeerHandlerType &peerHandler) = 0;
+    virtual void disconnectAllPeers() = 0;
     virtual QList<PeerHandlerType> peers() const = 0;
 };

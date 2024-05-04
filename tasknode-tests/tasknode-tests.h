@@ -45,12 +45,21 @@ public:
     {
         if (m_peerList.contains(peerHandler))
         {
-            emit peerDiconnected(peerHandler);
             m_peerList.removeAll(peerHandler);
+            emit peerDiconnected(peerHandler);
             return;
         }
         qCritical() << "Invalid handler";
         m_testFail = true;
+    }
+    void disconnectAllPeers() override final
+    {
+        while (!m_peerList.empty())
+        {
+            auto peerHandler = m_peerList.back();
+            m_peerList.pop_back();
+            emit peerDiconnected(peerHandler);
+        }
     }
     QList<PeerHandlerType> peers() const override final
     {

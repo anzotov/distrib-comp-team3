@@ -46,6 +46,7 @@ void TaskNode::start()
         throw std::logic_error("TaskNode: need to stop before starting again");
 
     qInfo() << "TaskNode: start";
+    m_state = State::Started;
     QTimer::singleShot(0, [this]()
                        { 
                             if(m_state == State::Started)
@@ -53,7 +54,6 @@ void TaskNode::start()
                                 m_state = State::TaskRequested;
                                 m_taskProvider->loadNextTask(); 
                             } });
-    m_state = State::Started;
 }
 
 void TaskNode::onTaskLoadDone(const CalcTask task)
@@ -174,10 +174,7 @@ void TaskNode::onPeerDiconnected(const TransportServiceBase::PeerHandlerType pee
 void TaskNode::stop()
 {
     qInfo() << "TaskNode: stopped";
-    for (auto &peer : m_transportServiceBase->peers())
-    {
-        m_transportServiceBase->disconnectPeer(peer);
-    }
     m_state = State::Stopped;
+    m_transportServiceBase->disconnectAllPeers();
     emit stopped(false);
 }
