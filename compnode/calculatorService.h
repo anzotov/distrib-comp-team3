@@ -1,19 +1,21 @@
 #pragma once
 
-#include <QObject>
-#include <QStringList>
-#include <QJSEngine>
+#include "../common/calcTask.h"
+#include "../common/calcResult.h"
 
-struct CalcTask;
+#include <QObject>
 
 class CalculatorService : public QObject
 {
     Q_OBJECT
+public:
+    explicit CalculatorService(QObject *parent) : QObject(parent) {}
+    virtual ~CalculatorService() = default;
+
+signals:
+    void calcDone(CalcResult result);
 
 public:
-    explicit CalculatorService(QObject *parent = nullptr);
-    QStringList calculate(const CalcTask &task);
-
-private:
-    QJSEngine m_jsEngine;
+    virtual void calculate(const CalcTask &task) = 0;
+    virtual void stop() = 0;
 };
