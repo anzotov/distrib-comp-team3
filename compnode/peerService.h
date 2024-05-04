@@ -1,20 +1,27 @@
 #pragma once
 
 #include "../common/transportServiceBase.h"
+#include "peerInfo.h"
 
 #include <QObject>
 #include <QList>
 
-#include <stdexcept>
-
-class PeerService : public TransportServiceBase
+class PeerService : public QObject
 {
+    Q_OBJECT
 public:
-    PeerService(QObject *parent = nullptr) : TransportServiceBase(parent) {}
+    PeerService(QObject *parent = nullptr) : QObject(parent) {}
+    virtual ~PeerService() = default;
+
+signals:
+    void receivedCalcTask(const PeerHandlerType peerHandler, const CalcTask task);
+    void receivedCalcResult(const PeerHandlerType peerHandler, const CalcResult result);
+    void peersChanged(QList<PeerInfo> peers);
 
 public:
-    virtual void startListening() = 0;
-    virtual void stopListening() = 0;
-    virtual void startDiscovery() = 0;
-    virtual void stopDiscovery() = 0;
+    virtual void start(const QString &compPower) = 0;
+    virtual void stop() = 0;
+    virtual void sendCalcTask(const PeerHandlerType &peerHandler, const CalcTask &task) = 0;
+    virtual void sendCalcResult(const PeerHandlerType &peerHandler, const CalcResult &result) = 0;
+    virtual QList<PeerInfo> peers() const = 0;
 };

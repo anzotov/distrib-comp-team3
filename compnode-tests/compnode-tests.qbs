@@ -5,7 +5,7 @@ Project
     AutotestRunner { }
 
     QtApplication {
-        name: "tasknode-tests"
+        name: "compnode-tests"
         type: base.concat("autotest")
 
         cpp.cxxLanguageVersion: "c++20"
@@ -16,10 +16,18 @@ Project
             //"QT_DISABLE_DEPRECATED_BEFORE=0x060000" // disables all the APIs deprecated before Qt 6.0.0
         ]
 
+        cpp.treatWarningsAsErrors: true
+
         consoleApplication: true
         files: [
             "compnode-tests.cpp",
             "compnode-tests.h",
+            "../compnode/peerService.h",
+            "../compnode/chunkerService.h",
+            "../compnode/compnode.h",
+            "../compnode/compnode.cpp",
+            "../common/calcResult.cpp",
+            "../common/calcTask.cpp",
         ]
 
         Group {     // Properties for the produced executable
@@ -42,6 +50,8 @@ Project
             // In order to do so, uncomment the following line.
             //"QT_DISABLE_DEPRECATED_BEFORE=0x060000" // disables all the APIs deprecated before Qt 6.0.0
         ]
+
+        cpp.treatWarningsAsErrors: true
 
         consoleApplication: true
         files: [

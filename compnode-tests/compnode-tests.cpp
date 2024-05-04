@@ -1,4 +1,4 @@
 #include "compnode-tests.h"
 #include <QTest>
 
-QTEST_MAIN(CompNodeTestCase1)
+QTEST_MAIN(CompNodeTestCase)
