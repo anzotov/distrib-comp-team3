@@ -6,12 +6,12 @@
 
 #include <QObject>
 
-class ChunkerService : public QObject
+class ChunkerServiceBase : public QObject
 {
     Q_OBJECT
 public:
-    ChunkerService(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~ChunkerService() = default;
+    ChunkerServiceBase(QObject *parent = nullptr) : QObject(parent) {}
+    virtual ~ChunkerServiceBase() = default;
 
 signals:
     void ready(const QString compPower);

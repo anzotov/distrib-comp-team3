@@ -22,8 +22,8 @@ Project
         files: [
             "compnode-tests.cpp",
             "compnode-tests.h",
-            "../compnode/peerService.h",
-            "../compnode/chunkerService.h",
+            "../compnode/peerServiceBase.h",
+            "../compnode/chunkerServiceBase.h",
             "../compnode/compnode.h",
             "../compnode/compnode.cpp",
             "../common/calcResult.cpp",
@@ -57,7 +57,7 @@ Project
         files: [
             "jsCalculatorService-tests.cpp",
             "jsCalculatorService-tests.h",
-            "../compnode/calculatorService.h",
+            "../compnode/calculatorServiceBase.h",
             "../compnode/jsCalculatorService.h",
             "../compnode/jsCalculatorService.cpp",
             "../common/calcResult.cpp",

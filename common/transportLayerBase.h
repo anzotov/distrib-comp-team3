@@ -5,14 +5,14 @@
 
 #include <stdexcept>
 
-class TransportLayer : public QObject
+class TransportLayerBase : public QObject
 {
     Q_OBJECT
 
 public:
     using PeerHandlerType = quint64;
-    TransportLayer(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~TransportLayer() = default;
+    TransportLayerBase(QObject *parent = nullptr) : QObject(parent) {}
+    virtual ~TransportLayerBase() = default;
 signals:
     void newConnection(const PeerHandlerType peerHandler, const QString peerInfo);
     void connectionClosed(const PeerHandlerType peerHandler);

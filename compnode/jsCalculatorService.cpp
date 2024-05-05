@@ -5,7 +5,7 @@
 
 using namespace std::literals;
 
-JsCalculatorService::JsCalculatorService(QObject *parent) : CalculatorService(parent)
+JsCalculatorService::JsCalculatorService(QObject *parent) : CalculatorServiceBase(parent)
 {
     m_jsEngine.globalObject().setProperty("sin", m_jsEngine.evaluate("f=function(x) { return Math.sin(x); }"));
     m_jsEngine.globalObject().setProperty("cos", m_jsEngine.evaluate("f=function(x) { return Math.cos(x); }"));

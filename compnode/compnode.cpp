@@ -1,7 +1,7 @@
 #include "compnode.h"
 #include <stdexcept>
 
-CompNode::CompNode(PeerService *peerService, ChunkerService *chunkerService, QObject *parent)
+CompNode::CompNode(PeerServiceBase *peerService, ChunkerServiceBase *chunkerService, QObject *parent)
     : QObject(parent),
       m_peerService(peerService),
       m_chunkerService(chunkerService)
@@ -11,13 +11,13 @@ CompNode::CompNode(PeerService *peerService, ChunkerService *chunkerService, QOb
     {
         throw std::runtime_error("CompNode: not all dependencies were satisfied");
     }
-    QObject::connect(m_chunkerService, &ChunkerService::ready, this, &CompNode::onChunkerServiceReady);
-    QObject::connect(m_chunkerService, &ChunkerService::calcResult, this, &CompNode::onChunkerServiceCalcResult);
-    QObject::connect(m_chunkerService, &ChunkerService::calcError, this, &CompNode::onChunkerServiceCalcError);
-    QObject::connect(m_chunkerService, &ChunkerService::sendChunkedTask, this, &CompNode::onChunkerServiceSendChunkedTask);
-    QObject::connect(m_peerService, &PeerService::receivedCalcTask, this, &CompNode::onReceivedCalcTask);
-    QObject::connect(m_peerService, &PeerService::receivedCalcResult, this, &CompNode::onReceivedCalcResult);
-    QObject::connect(m_peerService, &PeerService::peersChanged, this, &CompNode::onPeersChanged);
+    QObject::connect(m_chunkerService, &ChunkerServiceBase::ready, this, &CompNode::onChunkerServiceReady);
+    QObject::connect(m_chunkerService, &ChunkerServiceBase::calcResult, this, &CompNode::onChunkerServiceCalcResult);
+    QObject::connect(m_chunkerService, &ChunkerServiceBase::calcError, this, &CompNode::onChunkerServiceCalcError);
+    QObject::connect(m_chunkerService, &ChunkerServiceBase::sendChunkedTask, this, &CompNode::onChunkerServiceSendChunkedTask);
+    QObject::connect(m_peerService, &PeerServiceBase::receivedCalcTask, this, &CompNode::onReceivedCalcTask);
+    QObject::connect(m_peerService, &PeerServiceBase::receivedCalcResult, this, &CompNode::onReceivedCalcResult);
+    QObject::connect(m_peerService, &PeerServiceBase::peersChanged, this, &CompNode::onPeersChanged);
 }
 
 CompNode::~CompNode()

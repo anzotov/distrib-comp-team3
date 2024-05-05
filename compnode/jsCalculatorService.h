@@ -1,11 +1,11 @@
 #pragma once
 
-#include "calculatorService.h"
+#include "calculatorServiceBase.h"
 
 #include <QJSEngine>
 #include <QAtomicInteger>
 
-class JsCalculatorService final : public CalculatorService
+class JsCalculatorService final : public CalculatorServiceBase
 {
 public:
     explicit JsCalculatorService(QObject *parent = nullptr);

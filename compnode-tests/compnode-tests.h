@@ -6,11 +6,11 @@
 #include <QTest>
 #include <functional>
 
-struct ChunkerServiceMock final : ChunkerService
+struct ChunkerServiceMock final : ChunkerServiceBase
 {
     ChunkerServiceMock(
         std::function<void(ChunkerServiceMock *)> constructor, QObject *parent = nullptr)
-        : ChunkerService(parent)
+        : ChunkerServiceBase(parent)
     {
         constructor(this);
     }
@@ -60,11 +60,11 @@ struct ChunkerServiceMock final : ChunkerService
     std::function<void(ChunkerServiceMock *)> m_destructor;
 };
 
-struct PeerServiceMock final : PeerService
+struct PeerServiceMock final : PeerServiceBase
 {
     PeerServiceMock(
         std::function<void(PeerServiceMock *)> constructor, QObject *parent = nullptr)
-        : PeerService(parent)
+        : PeerServiceBase(parent)
     {
         constructor(this);
     }

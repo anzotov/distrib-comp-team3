@@ -5,12 +5,12 @@
 
 #include <QObject>
 
-class CalculatorService : public QObject
+class CalculatorServiceBase : public QObject
 {
     Q_OBJECT
 public:
-    explicit CalculatorService(QObject *parent) : QObject(parent) {}
-    virtual ~CalculatorService() = default;
+    explicit CalculatorServiceBase(QObject *parent) : QObject(parent) {}
+    virtual ~CalculatorServiceBase() = default;
 
 signals:
     void calcDone(CalcResult result);

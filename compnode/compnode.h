@@ -2,17 +2,17 @@
 
 #include "../common/calcTask.h"
 #include "../common/calcResult.h"
-#include "chunkerService.h"
-#include "peerService.h"
-#include "calculatorService.h"
+#include "chunkerServiceBase.h"
+#include "peerServiceBase.h"
+#include "calculatorServiceBase.h"
 #include <QObject>
 
 class CompNode final : public QObject
 {
     Q_OBJECT
 public:
-    CompNode(PeerService *peerService,
-             ChunkerService *chunkerService,
+    CompNode(PeerServiceBase *peerService,
+             ChunkerServiceBase *chunkerService,
              QObject *parent = nullptr);
     ~CompNode();
     void start();
@@ -38,6 +38,6 @@ private:
     void onPeersChanged(const QList<PeerInfo> peers);
 
     State m_state = State::Stopped;
-    PeerService *m_peerService;
-    ChunkerService *m_chunkerService;
+    PeerServiceBase *m_peerService;
+    ChunkerServiceBase *m_chunkerService;
 };

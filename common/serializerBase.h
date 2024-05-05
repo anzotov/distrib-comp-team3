@@ -4,8 +4,9 @@
 #include <stdexcept>
 
 template <class ArrayType, class IntermediateType>
-struct Serializer
+struct SerializerBase
 {
+    ~SerializerBase() = default;
     template <class T>
     ArrayType serialize(const T &object) const
     {
@@ -36,7 +37,7 @@ protected:
         }
         else
         {
-            throw std::logic_error("Serializer deserialization: unknown object");
+            throw std::logic_error("SerializerBase deserialization: unknown object");
         }
     }
 };

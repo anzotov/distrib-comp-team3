@@ -6,12 +6,12 @@
 #include <QObject>
 #include <QList>
 
-class PeerService : public QObject
+class PeerServiceBase : public QObject
 {
     Q_OBJECT
 public:
-    PeerService(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~PeerService() = default;
+    PeerServiceBase(QObject *parent = nullptr) : QObject(parent) {}
+    virtual ~PeerServiceBase() = default;
 
 signals:
     void receivedCalcTask(const PeerHandlerType peerHandler, const CalcTask task);

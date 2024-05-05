@@ -1,9 +1,9 @@
 #pragma once
 
 template <class ArrayType>
-struct Encoder
+struct EncoderBase
 {
-    virtual ~Encoder() = default;
+    virtual ~EncoderBase() = default;
     virtual ArrayType encode(const ArrayType &array) const = 0;
     virtual ArrayType decode(const ArrayType &array) const = 0;
 };
