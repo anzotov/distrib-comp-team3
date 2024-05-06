@@ -43,6 +43,7 @@ void ChunkerService::start()
 
 void ChunkerService::calculateTask(const PeerHandlerType &peerHandler, const CalcTask &task)
 {
+    qInfo() << "ChunkerService: calculating task";
     if (m_state != State::Ready)
         return;
 
@@ -62,14 +63,18 @@ void ChunkerService::calculateTask(const PeerHandlerType &peerHandler, const Cal
 
 void ChunkerService::sliceTask(const CalcTask &task)
 {
+    qInfo() << "ChunkerService: slicing task";
     QMap<PeerHandlerType, double> chunkCoefficients;
     double myCompPower = m_compPower.toDouble();
+    qDebug() << "My compPower: " << m_compPower;
     for (const auto &peer : m_peers)
     {
+        qDebug() << QStringLiteral("Peer %1 compPower %2").arg(peer.peerHandler).arg(peer.compPower);
         double powerCoef = myCompPower / peer.compPower.toDouble();
         chunkCoefficients.insert(peer.peerHandler, powerCoef);
     }
-    double normCoef = std::accumulate(chunkCoefficients.cbegin(), chunkCoefficients.cend(), myCompPower);
+    double normCoef = std::accumulate(chunkCoefficients.cbegin(), chunkCoefficients.cend(), 1);
+    qDebug() << "normCoef: " << normCoef;
 
     auto dataSize = task.data.size();
     CalcTask chunk(task.function, {}, false);
@@ -83,6 +88,7 @@ void ChunkerService::sliceTask(const CalcTask &task)
         }
         m_resultChunks.insert(peer, {});
         m_resultChunksOrder.append(peer);
+        qDebug() << "Sending chunk to: " << peer;
         emit sendChunkedTask(peer, chunk);
         curItem = i;
         chunk.data.clear();
@@ -96,6 +102,7 @@ void ChunkerService::sliceTask(const CalcTask &task)
 
 void ChunkerService::updatePeers(const QList<PeerInfo> &peers)
 {
+    qInfo() << "ChunkerService: updating peers";
     QMap<PeerHandlerType, PeerInfo> peersMap;
     for (const auto &peer : peers)
     {
@@ -128,18 +135,22 @@ void ChunkerService::OnCalculatorServiceCalcDone(CalcResult result)
 {
     if (m_state == State::TestCalcRequested)
     {
+        qInfo() << "ChunkerService: test task done";
         std::chrono::nanoseconds taskTime = std::chrono::steady_clock::now() - m_taskStartTime;
-        m_compPower = taskTime.count();
+        m_compPower = QStringLiteral("%1").arg(taskTime.count());
+        setStateReady();
         return;
     }
     if (m_state == State::ChunkTaskReceived)
     {
+        qInfo() << "ChunkerService: chunked task done";
         m_state = State::Ready;
-        emit CalcResult(result);
+        emit calcResult(m_taskSourceHandler, result);
         return;
     }
     if (m_state == State::MainTaskReceived)
     {
+        qInfo() << "ChunkerService: my chunk done";
         m_result = result;
         checkChunkedResult();
     }
@@ -147,6 +158,7 @@ void ChunkerService::OnCalculatorServiceCalcDone(CalcResult result)
 
 void ChunkerService::processChunkedResult(const PeerHandlerType &peerHandler, const CalcResult &result)
 {
+    qInfo() << "ChunkerService: chunked result received";
     m_resultChunks[peerHandler] = result;
     checkChunkedResult();
 }
@@ -160,6 +172,7 @@ void ChunkerService::checkChunkedResult()
         if (!result.has_value())
             return;
     }
+    qInfo() << "ChunkerService: all chunks ready";
     CalcResult result({}, true);
     for (const auto &peer : m_resultChunksOrder)
     {
@@ -172,6 +185,7 @@ void ChunkerService::checkChunkedResult()
 
 void ChunkerService::setStateReady()
 {
+    qInfo() << "ChunkerService: ready";
     m_state = State::Ready;
     m_taskSourceHandler = "";
     emit ready(m_compPower);
@@ -179,6 +193,7 @@ void ChunkerService::setStateReady()
 
 void ChunkerService::stop()
 {
+    qInfo() << "ChunkerService: stop";
     m_state = State::Stopped;
     m_calculatorService->stop();
 }
