@@ -8,6 +8,17 @@
 struct TransportServiceMock : TransportServiceBase
 {
 public:
+    void sendHandshake(const PeerHandlerType &peerHandler, const Handshake &handshake) override final
+    {
+        if (handshake.peerType != Handshake::PeerType::TaskNode)
+        {
+            qCritical() << "Invalid handshake";
+            m_testFail = true;
+            return;
+        }
+        emit receivedHandshake(peerHandler, Handshake(Handshake::PeerType::CompNode, QStringLiteral("1000")));
+    }
+
     void sendCalcTask(const PeerHandlerType &peerHandler, const CalcTask &task) override final
     {
         if (m_peerList.contains(peerHandler))
@@ -39,7 +50,7 @@ public:
             return;
         }
         m_peerList.append(QString::number(m_handler++));
-        emit newPeer(m_peerList.back());
+        emit newPeer(m_peerList.back(), peerInfo, true);
     }
     void disconnectPeer(const PeerHandlerType &peerHandler) override final
     {

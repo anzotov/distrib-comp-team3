@@ -87,10 +87,10 @@ private slots:
         CalcResult test_result({"2", "3"}, test_task.isMain);
 
         CalcTask test_peerChunk("sin(x)", {"0"}, false);
-        CalcResult test_peerChunkResult({"2"}, test_task.isMain);
+        CalcResult test_peerChunkResult({"2"}, test_peerChunk.isMain);
 
         CalcTask test_myChunk("sin(x)", {"1"}, false);
-        CalcResult test_myChunkResult({"3"}, test_task.isMain);
+        CalcResult test_myChunkResult({"3"}, test_myChunk.isMain);
 
         PeerHandlerType test_taskNodeHandler = "123";
         PeerHandlerType test_peerHandler = "125";

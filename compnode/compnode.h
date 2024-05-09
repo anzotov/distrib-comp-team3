@@ -36,8 +36,11 @@ private:
     void onReceivedCalcTask(const PeerHandlerType peerHandler, const CalcTask task);
     void onReceivedCalcResult(const PeerHandlerType peerHandler, const CalcResult result);
     void onPeersChanged(const QList<PeerInfo> peers);
+    void onTaskNodeDisconnected(const PeerHandlerType peerHandler);
+    void restartNode();
 
     State m_state = State::Stopped;
     PeerServiceBase *m_peerService;
     ChunkerServiceBase *m_chunkerService;
+    PeerHandlerType m_taskNodeHandler;
 };

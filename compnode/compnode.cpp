@@ -18,6 +18,7 @@ CompNode::CompNode(PeerServiceBase *peerService, ChunkerServiceBase *chunkerServ
     QObject::connect(m_peerService, &PeerServiceBase::receivedCalcTask, this, &CompNode::onReceivedCalcTask);
     QObject::connect(m_peerService, &PeerServiceBase::receivedCalcResult, this, &CompNode::onReceivedCalcResult);
     QObject::connect(m_peerService, &PeerServiceBase::peersChanged, this, &CompNode::onPeersChanged);
+    QObject::connect(m_peerService, &PeerServiceBase::taskNodeDisconnected, this, &CompNode::onTaskNodeDisconnected);
 }
 
 CompNode::~CompNode()
@@ -53,12 +54,21 @@ void CompNode::onPeersChanged(const QList<PeerInfo> peers)
     m_chunkerService->updatePeers(peers);
 }
 
+void CompNode::onTaskNodeDisconnected(const PeerHandlerType peerHandler)
+{
+    if (m_state == State::TaskReceived && peerHandler == m_taskNodeHandler)
+    {
+        restartNode();
+    }
+}
+
 void CompNode::onReceivedCalcTask(const PeerHandlerType peerHandler, const CalcTask task)
 {
     if (m_state == State::Ready)
     {
         qInfo() << "CompNode: Received CalcTask";
         m_state = State::TaskReceived;
+        m_taskNodeHandler = peerHandler;
         m_chunkerService->calculateTask(peerHandler, task);
     }
 }
@@ -96,10 +106,7 @@ void CompNode::onChunkerServiceCalcError()
     if (m_state == State::TaskReceived)
     {
         qInfo() << "CompNode: Error received from ChunkerService";
-        m_state = State::Starting;
-        m_chunkerService->stop();
-        m_peerService->stop();
-        m_chunkerService->start();
+        restartNode();
     }
 }
 
@@ -110,4 +117,12 @@ void CompNode::stop()
     m_chunkerService->stop();
     m_peerService->stop();
     emit stopped();
+}
+
+void CompNode::restartNode()
+{
+    m_state = State::Starting;
+    m_chunkerService->stop();
+    m_peerService->stop();
+    m_chunkerService->start();
 }

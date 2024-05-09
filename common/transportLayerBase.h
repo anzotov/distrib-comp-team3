@@ -10,7 +10,7 @@ class TransportLayerBase : public QObject
     Q_OBJECT
 
 public:
-    using PeerHandlerType = quint64;
+    using PeerHandlerType = QString;
     TransportLayerBase(QObject *parent = nullptr) : QObject(parent) {}
     virtual ~TransportLayerBase() = default;
 signals:

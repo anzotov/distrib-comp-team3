@@ -125,9 +125,7 @@ void ChunkerService::updatePeers(const QList<PeerInfo> &peers)
     m_peers = peersMap;
     if (isPeerMissing)
     {
-        m_state = State::Ready;
-        m_calculatorService->stop();
-        emit calcError();
+        stopCalc();
     }
 }
 
@@ -159,8 +157,16 @@ void ChunkerService::OnCalculatorServiceCalcDone(CalcResult result)
 void ChunkerService::processChunkedResult(const PeerHandlerType &peerHandler, const CalcResult &result)
 {
     qInfo() << "ChunkerService: chunked result received";
-    m_resultChunks[peerHandler] = result;
-    checkChunkedResult();
+    if (result.isMain == true)
+    {
+        qCritical() << "ChunkerService: wrong result category";
+        stopCalc();
+    }
+    else
+    {
+        m_resultChunks[peerHandler] = result;
+        checkChunkedResult();
+    }
 }
 
 void ChunkerService::checkChunkedResult()
@@ -181,6 +187,13 @@ void ChunkerService::checkChunkedResult()
     result.data.append(m_result->data);
     m_state = State::Ready;
     emit calcResult(m_taskSourceHandler, result);
+}
+
+void ChunkerService::stopCalc()
+{
+    m_state = State::Ready;
+    m_calculatorService->stop();
+    emit calcError();
 }
 
 void ChunkerService::setStateReady()

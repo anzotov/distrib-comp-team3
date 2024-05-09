@@ -23,6 +23,7 @@ TaskNode::TaskNode(TransportServiceBase *transportServiceBase,
     }
     QObject::connect(m_transportServiceBase, &TransportServiceBase::receivedCalcResult,
                      this, &TaskNode::onReceivedCalcResult);
+    QObject::connect(m_transportServiceBase, &TransportServiceBase::receivedHandshake, this, &TaskNode::onReceivedHandshake);
     QObject::connect(m_transportServiceBase, &TransportServiceBase::newPeer, this, &TaskNode::onNewPeer);
     QObject::connect(m_transportServiceBase, &TransportServiceBase::connectError, this, &TaskNode::onConnectError);
     QObject::connect(m_transportServiceBase, &TransportServiceBase::peerDiconnected, this, &TaskNode::onPeerDiconnected);
@@ -86,19 +87,47 @@ void TaskNode::onNoTasksAvailable()
     }
 }
 
-void TaskNode::onNewPeer(const TransportServiceBase::PeerHandlerType peerHandler)
+void TaskNode::sendHandshake(const TransportServiceBase::PeerHandlerType &peerHandler)
 {
-    if (m_state == State::ConnectionRequested)
+    qInfo() << "TaskNode: sending handshake";
+    m_transportServiceBase->sendHandshake(peerHandler, {Handshake::PeerType::TaskNode, ""});
+}
+
+void TaskNode::onNewPeer(const TransportServiceBase::PeerHandlerType peerHandler, const QString peerInfo, bool outgoing)
+{
+    if (m_state == State::ConnectionRequested && outgoing && peerInfo == m_peerInfo)
     {
         qInfo() << "TaskNode: connected to peer";
-        m_state = State::TaskSent;
-        m_peerHandler = peerHandler;
-        m_transportServiceBase->sendCalcTask(peerHandler, *m_task);
+        m_state = State::HandshakeSent;
+        sendHandshake(peerHandler);
     }
     else
     {
         m_transportServiceBase->disconnectPeer(peerHandler);
     }
+}
+
+void TaskNode::onReceivedHandshake(const TransportServiceBase::PeerHandlerType peerHandler, const Handshake handshake)
+{
+    if (m_state == State::ConnectionRequested)
+    {
+        m_state = State::HandshakeSent;
+        sendHandshake(peerHandler);
+    }
+    if (m_state == State::HandshakeSent)
+    {
+        qInfo() << "TaskNode: received handshake";
+        if (handshake.peerType == Handshake::PeerType::CompNode)
+        {
+            qInfo() << "TaskNode: sending task";
+            m_state = State::TaskSent;
+            m_peerHandler = peerHandler;
+            m_transportServiceBase->sendCalcTask(peerHandler, *m_task);
+            return;
+        }
+    }
+    qCritical() << "Unexpected handshake";
+    stop();
 }
 
 void TaskNode::onConnectError(const QString &peerInfo)

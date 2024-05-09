@@ -35,13 +35,15 @@ private:
         Started,
         TaskRequested,
         ConnectionRequested,
+        HandshakeSent,
         TaskSent,
         FormatRequested,
     };
 
+    void onReceivedHandshake(const TransportServiceBase::PeerHandlerType peerHandler, const Handshake handshake);
     void onReceivedCalcResult(const TransportServiceBase::PeerHandlerType peerHandler,
                               const CalcResult result);
-    void onNewPeer(const TransportServiceBase::PeerHandlerType peerHandler);
+    void onNewPeer(const TransportServiceBase::PeerHandlerType peerHandler, const QString peerInfo, bool outgoing);
     void onConnectError(const QString &peerInfo);
     void onPeerDiconnected(const TransportServiceBase::PeerHandlerType peerHandler);
     void onTaskLoadDone(const CalcTask task);
@@ -49,10 +51,11 @@ private:
     void onNoTasksAvailable();
     void onResultFormatDone();
     void onResultFormatError(CalcResult result);
+    void sendHandshake(const TransportServiceBase::PeerHandlerType &peerHandler);
 
     TransportServiceBase *m_transportServiceBase = nullptr;
     TaskProvider *m_taskProvider = nullptr;
-    
+
     State m_state = State::Stopped;
     const QString m_peerInfo;
     const int m_maxConnectAttempts = 1;

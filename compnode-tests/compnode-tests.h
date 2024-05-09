@@ -24,27 +24,32 @@ struct ChunkerServiceMock final : ChunkerServiceBase
     void start() override final
     {
         ++m_startCount;
-        m_start(this);
+        if (m_start)
+            m_start(this);
     }
     void stop() override final
     {
         ++m_stopCount;
-        m_stop(this);
+        if (m_stop)
+            m_stop(this);
     }
     void calculateTask(const PeerHandlerType &peerHandler, const CalcTask &task) override final
     {
         ++m_calculateTaskCount;
-        m_calculateTask(this, peerHandler, task);
+        if (m_calculateTask)
+            m_calculateTask(this, peerHandler, task);
     }
     void updatePeers(const QList<PeerInfo> &peers) override final
     {
         ++m_updatePeersCount;
-        m_updatePeers(this, peers);
+        if (m_updatePeers)
+            m_updatePeers(this, peers);
     }
     void processChunkedResult(const PeerHandlerType &peerHandler, const CalcResult &result) override final
     {
         ++m_processChunkedResultCount;
-        m_processChunkedResult(this, peerHandler, result);
+        if (m_processChunkedResult)
+            m_processChunkedResult(this, peerHandler, result);
     }
 
     std::function<void(ChunkerServiceMock *)> m_start;
@@ -273,6 +278,75 @@ private slots:
             QCOMPARE(task.data, test_task.data);
             QCOMPARE(task.isMain, test_task.isMain);
             emit self->calcError();
+        };
+        test_chunkerServiceMock->m_updatePeers =
+            [&](ChunkerServiceMock *, const QList<PeerInfo> &peers)
+        {
+            QVERIFY(peers.empty());
+        };
+        test_chunkerServiceMock->m_processChunkedResult =
+            [&](ChunkerServiceMock *, const PeerHandlerType &, const CalcResult &)
+        {
+            QFAIL("Shouldn't be called in this test");
+        };
+        CompNode node(test_peerServiceMock, test_chunkerServiceMock);
+        node.start();
+        QTRY_COMPARE(test_chunkerServiceMock->m_startCount, 1);
+        QTRY_COMPARE(test_peerServiceMock->m_startCount, 1);
+        QTRY_COMPARE(test_chunkerServiceMock->m_updatePeersCount, 1);
+
+        emit test_peerServiceMock->receivedCalcTask(test_taskNodeHandler, test_task);
+        QTRY_COMPARE(test_chunkerServiceMock->m_calculateTaskCount, 1);
+        QTRY_COMPARE(test_chunkerServiceMock->m_stopCount, 1);
+        QTRY_COMPARE(test_peerServiceMock->m_stopCount, 1);
+        QTRY_COMPARE(test_chunkerServiceMock->m_startCount, 2);
+        QTRY_COMPARE(test_peerServiceMock->m_startCount, 2);
+        QTRY_COMPARE(test_chunkerServiceMock->m_updatePeersCount, 2);
+    }
+    void TaskNodeDisconnectTest()
+    {
+        CalcTask test_task("sin(x)", {"0", "1"}, true);
+        PeerHandlerType test_taskNodeHandler = "123";
+        QString test_compPower = "1000";
+        auto test_peerServiceMock = new PeerServiceMock([&](PeerServiceMock *) {});
+        test_peerServiceMock->m_start =
+            [&](PeerServiceMock *self, const QString &compPower)
+        {
+            QCOMPARE(compPower, test_compPower);
+            emit self->peersChanged({});
+        };
+        test_peerServiceMock->m_stop =
+            [&](PeerServiceMock *) {};
+        test_peerServiceMock->m_sendCalcTask =
+            [&](PeerServiceMock *, const PeerHandlerType &, const CalcTask &)
+        {
+            QFAIL("Shouldn't be called in this test");
+        };
+        test_peerServiceMock->m_sendCalcResult =
+            [&](PeerServiceMock *, const PeerHandlerType &, const CalcResult &)
+        {
+            QFAIL("Shouldn't be called in this test");
+        };
+        test_peerServiceMock->m_peers =
+            [&](const PeerServiceMock *)
+        { return QList<PeerInfo>{}; };
+
+        auto test_chunkerServiceMock = new ChunkerServiceMock([&](ChunkerServiceMock *) {});
+        test_chunkerServiceMock->m_start =
+            [&](ChunkerServiceMock *self)
+        {
+            emit self->ready(test_compPower);
+        };
+        test_chunkerServiceMock->m_stop =
+            [&](ChunkerServiceMock *) {};
+        test_chunkerServiceMock->m_calculateTask =
+            [&](ChunkerServiceMock *, const PeerHandlerType &peerHandler, const CalcTask &task)
+        {
+            QCOMPARE(peerHandler, test_taskNodeHandler);
+            QCOMPARE(task.function, test_task.function);
+            QCOMPARE(task.data, test_task.data);
+            QCOMPARE(task.isMain, test_task.isMain);
+            emit test_peerServiceMock->taskNodeDisconnected(peerHandler);
         };
         test_chunkerServiceMock->m_updatePeers =
             [&](ChunkerServiceMock *, const QList<PeerInfo> &peers)

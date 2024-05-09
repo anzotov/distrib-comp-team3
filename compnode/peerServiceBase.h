@@ -17,6 +17,7 @@ signals:
     void receivedCalcTask(const PeerHandlerType peerHandler, const CalcTask task);
     void receivedCalcResult(const PeerHandlerType peerHandler, const CalcResult result);
     void peersChanged(QList<PeerInfo> peers);
+    void taskNodeDisconnected(const PeerHandlerType peerHandler);
 
 public:
     virtual void start(const QString &compPower) = 0;

@@ -33,6 +33,7 @@ private:
     void OnCalculatorServiceCalcDone(CalcResult result);
     void sliceTask(const CalcTask &task);
     void checkChunkedResult();
+    void stopCalc();
 
     State m_state = State::Stopped;
     CalculatorServiceBase *m_calculatorService;

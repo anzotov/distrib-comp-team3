@@ -25,6 +25,7 @@ Project
             "../common/transportServiceBase.h",
             "../common/calcResult.cpp",
             "../common/calcTask.cpp",
+            "../common/handshake.cpp",
             "../tasknode/tasknode.h",
             "../tasknode/tasknode.cpp",
             "../tasknode/taskProvider.h",
