@@ -1,4 +1,4 @@
-#include "tests.h"
+#include "common-tests.h"
 
 #include <QtTest>
 

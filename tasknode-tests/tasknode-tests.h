@@ -4,122 +4,129 @@
 
 #include <QObject>
 #include <QTest>
+#include <functional>
 
-struct TransportServiceMock : TransportServiceBase
+struct TransportServiceMock final : TransportServiceBase
 {
-public:
+    TransportServiceMock(QObject *parent = nullptr) : TransportServiceBase(parent)
+    {
+        if (m_contructor)
+            m_contructor(this);
+    }
+    ~TransportServiceMock()
+    {
+        if (m_destructor)
+            m_destructor(this);
+    }
+
     void sendHandshake(const PeerHandlerType &peerHandler, const Handshake &handshake) override final
     {
-        if (handshake.peerType != Handshake::PeerType::TaskNode)
-        {
-            qCritical() << "Invalid handshake";
-            m_testFail = true;
-            return;
-        }
-        emit receivedHandshake(peerHandler, Handshake(Handshake::PeerType::CompNode, QStringLiteral("1000")));
+        ++m_sendHandshakeCount;
+        if (m_sendHandshake)
+            m_sendHandshake(this, peerHandler, handshake);
     }
 
     void sendCalcTask(const PeerHandlerType &peerHandler, const CalcTask &task) override final
     {
-        if (m_peerList.contains(peerHandler))
-        {
-            m_tasks.append(task);
-            emit receivedCalcTask(peerHandler, task);
-            return;
-        }
-        qCritical() << "Invalid handler";
-        m_testFail = true;
+        ++m_sendCalcTaskCount;
+        if (m_sendCalcTask)
+            m_sendCalcTask(this, peerHandler, task);
     }
     void sendCalcResult(const PeerHandlerType &peerHandler, const CalcResult &result) override final
     {
-        if (m_peerList.contains(peerHandler))
-        {
-            m_results.append(result);
-            emit receivedCalcResult(peerHandler, result);
-            return;
-        }
-        qCritical() << "Invalid handler";
-        m_testFail = true;
+        ++m_sendCalcResultCount;
+        if (m_sendCalcResult)
+            m_sendCalcResult(this, peerHandler, result);
     }
     void connectPeer(const QString &peerInfo) override final
     {
-        ++m_connectAttempts;
-        if (m_connectError)
-        {
-            emit connectError(peerInfo);
-            return;
-        }
-        m_peerList.append(QString::number(m_handler++));
-        emit newPeer(m_peerList.back(), peerInfo, true);
+        ++m_connectPeerCount;
+        if (m_connectPeer)
+            m_connectPeer(this, peerInfo);
     }
     void disconnectPeer(const PeerHandlerType &peerHandler) override final
     {
-        if (m_peerList.contains(peerHandler))
-        {
-            m_peerList.removeAll(peerHandler);
-            emit peerDiconnected(peerHandler);
-            return;
-        }
-        qCritical() << "Invalid handler";
-        m_testFail = true;
+        ++m_disconnectPeerCount;
+        if (m_disconnectPeer)
+            m_disconnectPeer(this, peerHandler);
     }
     void disconnectAllPeers() override final
     {
-        while (!m_peerList.empty())
-        {
-            auto peerHandler = m_peerList.back();
-            m_peerList.pop_back();
-            emit peerDiconnected(peerHandler);
-        }
+        ++m_disconnectAllPeersCount;
+        if (m_disconnectAllPeers)
+            m_disconnectAllPeers(this);
     }
     QList<PeerHandlerType> peers() const override final
     {
-        return m_peerList;
+        ++m_peersCount;
+        return m_peers(this);
+    }
+    void startListening() override final
+    {
+        ++m_startListeningCount;
+        if (m_startListening)
+            m_startListening(this);
+    }
+    void stopListening() override final
+    {
+        ++m_stopListeningCount;
+        if (m_stopListening)
+            m_stopListening(this);
     }
 
-    QList<CalcTask> m_tasks;
-    QList<CalcResult> m_results;
-    QList<PeerHandlerType> m_peerList;
-    quint64 m_handler;
-    bool m_connectError = false;
-    bool m_testFail = false;
-    int m_connectAttempts = 0;
+    std::function<void(TransportServiceMock *)> m_contructor;
+    std::function<void(TransportServiceMock *)> m_destructor;
+    std::function<void(TransportServiceMock *, const PeerHandlerType &, const Handshake &)> m_sendHandshake;
+    int m_sendHandshakeCount = 0;
+    std::function<void(TransportServiceMock *, const PeerHandlerType &, const CalcTask &)> m_sendCalcTask;
+    int m_sendCalcTaskCount = 0;
+    std::function<void(TransportServiceMock *, const PeerHandlerType &, const CalcResult &)> m_sendCalcResult;
+    int m_sendCalcResultCount = 0;
+    std::function<void(TransportServiceMock *, const QString &)> m_connectPeer;
+    int m_connectPeerCount = 0;
+    std::function<void(TransportServiceMock *, const PeerHandlerType &)> m_disconnectPeer;
+    int m_disconnectPeerCount = 0;
+    std::function<void(TransportServiceMock *)> m_disconnectAllPeers;
+    int m_disconnectAllPeersCount = 0;
+    std::function<QList<PeerHandlerType>(const TransportServiceMock *)> m_peers;
+    mutable int m_peersCount = 0;
+    std::function<void(TransportServiceMock *)> m_startListening;
+    int m_startListeningCount = 0;
+    std::function<void(TransportServiceMock *)> m_stopListening;
+    int m_stopListeningCount = 0;
 };
 
-struct TaskProviderMock : TaskProvider
+struct TaskProviderMock final : TaskProvider
 {
+    TaskProviderMock(QObject *parent = nullptr) : TaskProvider(parent)
+    {
+        if (m_constructor)
+            m_constructor(this);
+    }
+    ~TaskProviderMock()
+    {
+        if (m_destructor)
+            m_destructor(this);
+    }
     void loadNextTask() override final
     {
-        if (m_loadError)
-        {
-            emit taskLoadError();
-            return;
-        }
-        if (m_noTasks)
-        {
-            emit noTasksAvailable();
-            return;
-        }
-        auto task = m_tasks.at(m_task_index++);
-        emit taskLoadDone(task);
+        ++m_loadNextTaskCount;
+        if (m_loadNextTask)
+            m_loadNextTask(this);
     }
     void formatResult(const CalcResult &result) override final
     {
-        if (m_formatError)
-        {
-            emit resultFormatError(result);
-            return;
-        }
-        m_results.append(result);
-        emit resultFormatDone();
+        ++m_formatResultCount;
+        if (m_formatResult)
+            m_formatResult(this, result);
     }
-    QList<CalcTask> m_tasks;
-    QList<CalcResult> m_results;
-    size_t m_task_index = 0;
-    bool m_testFail = false;
-    bool m_loadError = false;
-    bool m_noTasks = false;
-    bool m_formatError = false;
+
+    std::function<void(TaskProviderMock *)> m_constructor;
+    std::function<void(TaskProviderMock *)> m_destructor;
+    std::function<void(TaskProviderMock *)> m_loadNextTask;
+    int m_loadNextTaskCount = 0;
+    std::function<void(TaskProviderMock *, const CalcResult &result)> m_formatResult;
+    int m_formatResultCount = 0;
 };
 
 class TaskNodeTests : public QObject
@@ -129,125 +136,233 @@ class TaskNodeTests : public QObject
 private slots:
     void PositiveTest()
     {
-        const auto testTask = CalcTask("sin(x)", {"0", "1"}, true);
-        const auto testResult = CalcResult({"1", "2"}, true);
-        auto transportServiceMock = new TransportServiceMock();
-        auto taskProviderMock = new TaskProviderMock();
-        auto taskNode = new TaskNode(transportServiceMock, taskProviderMock, "127.0.0.1:3333", 10, 1, this);
-        bool workDone = false;
-        QObject::connect(taskNode, &TaskNode::stopped, this, [this, &workDone](bool success)
+        QString test_peerInfo = "127.0.0.1:3333";
+        const auto test_task = CalcTask("sin(x)", {"0", "1"}, true);
+        const auto test_result = CalcResult({"1", "2"}, true);
+        TransportServiceBase::PeerHandlerType test_peerHandler = "1234";
+        Handshake test_handshake(Handshake::PeerType::CompNode, "1000", "{12345-4-5-6}");
+        auto test_taskProviderMock = new TaskProviderMock;
+        test_taskProviderMock->m_loadNextTask =
+            [&](TaskProviderMock *self)
+        {
+            emit self->taskLoadDone(test_task);
+        };
+        test_taskProviderMock->m_formatResult =
+            [&](TaskProviderMock *self, const CalcResult &result)
+        {
+            QCOMPARE(result, test_result);
+            emit self->resultFormatDone();
+        };
+
+        auto test_transportServiceMock = new TransportServiceMock;
+        test_transportServiceMock->m_connectPeer =
+            [&](TransportServiceMock *self, const QString &peerInfo)
+        {
+            QCOMPARE(peerInfo, test_peerInfo);
+            emit self->newPeer(test_peerHandler, test_peerInfo, true);
+        };
+        test_transportServiceMock->m_sendHandshake =
+            [&](TransportServiceMock *self, const TransportServiceBase::PeerHandlerType &peerHandler, const Handshake &handshake)
+        {
+            QCOMPARE(peerHandler, test_peerHandler);
+            QCOMPARE(handshake.peerType, Handshake::PeerType::TaskNode);
+            QVERIFY(!handshake.uuid.isEmpty());
+            emit self->receivedHandshake(peerHandler, test_handshake);
+        };
+        test_transportServiceMock->m_sendCalcTask =
+            [&](TransportServiceMock *self, const TransportServiceBase::PeerHandlerType &peerHandler, const CalcTask &task)
+        {
+            QCOMPARE(peerHandler, test_peerHandler);
+            QCOMPARE(task, test_task);
+            emit self->receivedCalcResult(peerHandler, test_result);
+        };
+        test_transportServiceMock->m_disconnectPeer =
+            [&](TransportServiceMock *self, const TransportServiceBase::PeerHandlerType &peerHandler)
+        {
+            QCOMPARE(peerHandler, test_peerHandler);
+            emit self->peerDiconnected(peerHandler);
+        };
+
+        TaskNode taskNode(test_transportServiceMock, test_taskProviderMock, test_peerInfo, 10, 1);
+
+        int test_stoppedCount = 0;
+        QObject::connect(&taskNode, &TaskNode::stopped, this, [&](bool success)
                          {
-                            workDone = true;
+                            ++test_stoppedCount;
                             QVERIFY(success); });
-        taskProviderMock->m_tasks.append(testTask);
-        QObject::connect(transportServiceMock, &TransportServiceMock::receivedCalcTask, this,
-                         [this, transportServiceMock, testResult](const TransportServiceBase::PeerHandlerType peerHandler,
-                                                                  const CalcTask task)
-                         { (void)task; transportServiceMock->sendCalcResult(peerHandler, testResult); });
-        taskNode->start();
-        QTRY_VERIFY_WITH_TIMEOUT(workDone, 100);
-        QVERIFY(!taskProviderMock->m_testFail);
-        QVERIFY(!transportServiceMock->m_testFail);
-        QCOMPARE(taskProviderMock->m_results.length(), 1);
-        QCOMPARE(taskProviderMock->m_results.at(0).data, testResult.data);
-        QCOMPARE(taskProviderMock->m_results.at(0).isMain, testResult.isMain);
+
+        taskNode.start();
+        QTRY_COMPARE(test_transportServiceMock->m_connectPeerCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_sendHandshakeCount, 1);
+        QTRY_COMPARE(test_taskProviderMock->m_loadNextTaskCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_sendCalcTaskCount, 1);
+        QTRY_COMPARE(test_taskProviderMock->m_formatResultCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_disconnectPeerCount, 1);
+        QTRY_COMPARE(test_stoppedCount, 1);
     }
     void LoadErrorTest()
     {
-        const auto testTask = CalcTask("sin(x)", {"0", "1"}, true);
-        const auto testResult = CalcResult({"1", "2"}, true);
-        auto transportServiceMock = new TransportServiceMock();
-        auto taskProviderMock = new TaskProviderMock();
-        taskProviderMock->m_loadError = true;
-        auto taskNode = new TaskNode(transportServiceMock, taskProviderMock, "127.0.0.1:3333", 10, 1, this);
-        bool workDone = false;
-        QObject::connect(taskNode, &TaskNode::stopped, this, [this, &workDone](bool success)
+        QString test_peerInfo = "127.0.0.1:3333";
+        const auto test_task = CalcTask("sin(x)", {"0", "1"}, true);
+        const auto test_result = CalcResult({"1", "2"}, true);
+        TransportServiceBase::PeerHandlerType test_peerHandler = "1234";
+        Handshake test_handshake(Handshake::PeerType::CompNode, "1000", "{12345-4-5-6}");
+        auto test_taskProviderMock = new TaskProviderMock;
+        test_taskProviderMock->m_loadNextTask =
+            [&](TaskProviderMock *self)
+        {
+            emit self->taskLoadError();
+        };
+
+        auto test_transportServiceMock = new TransportServiceMock;
+        TaskNode taskNode(test_transportServiceMock, test_taskProviderMock, test_peerInfo, 10, 1);
+
+        int test_stoppedCount = 0;
+        QObject::connect(&taskNode, &TaskNode::stopped, this, [&](bool success)
                          {
-                            workDone = true;
+                            ++test_stoppedCount;
                             QVERIFY(!success); });
-        taskProviderMock->m_tasks.append(testTask);
-        QObject::connect(transportServiceMock, &TransportServiceMock::receivedCalcTask, this,
-                         [this, transportServiceMock, testResult](const TransportServiceBase::PeerHandlerType peerHandler,
-                                                                  const CalcTask task)
-                         { (void)task; transportServiceMock->sendCalcResult(peerHandler, testResult); });
-        taskNode->start();
-        QTRY_VERIFY_WITH_TIMEOUT(workDone, 100);
-        QVERIFY(!taskProviderMock->m_testFail);
-        QVERIFY(!transportServiceMock->m_testFail);
-        QCOMPARE(taskProviderMock->m_results.length(), 0);
+
+        taskNode.start();
+        QTRY_COMPARE(test_stoppedCount, 1);
+        QTRY_COMPARE(test_taskProviderMock->m_loadNextTaskCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_disconnectAllPeersCount, 1);
     }
     void NoTasksTest()
     {
-        const auto testTask = CalcTask("sin(x)", {"0", "1"}, true);
-        const auto testResult = CalcResult({"1", "2"}, true);
-        auto transportServiceMock = new TransportServiceMock();
-        auto taskProviderMock = new TaskProviderMock();
-        taskProviderMock->m_noTasks = true;
-        auto taskNode = new TaskNode(transportServiceMock, taskProviderMock, "127.0.0.1:3333", 10, 1, this);
-        bool workDone = false;
-        QObject::connect(taskNode, &TaskNode::stopped, this, [this, &workDone](bool success)
+        QString test_peerInfo = "127.0.0.1:3333";
+        const auto test_task = CalcTask("sin(x)", {"0", "1"}, true);
+        const auto test_result = CalcResult({"1", "2"}, true);
+        TransportServiceBase::PeerHandlerType test_peerHandler = "1234";
+        Handshake test_handshake(Handshake::PeerType::CompNode, "1000", "{12345-4-5-6}");
+        auto test_taskProviderMock = new TaskProviderMock;
+        test_taskProviderMock->m_loadNextTask =
+            [&](TaskProviderMock *self)
+        {
+            emit self->noTasksAvailable();
+        };
+
+        auto test_transportServiceMock = new TransportServiceMock;
+        TaskNode taskNode(test_transportServiceMock, test_taskProviderMock, test_peerInfo, 10, 1);
+
+        int test_stoppedCount = 0;
+        QObject::connect(&taskNode, &TaskNode::stopped, this, [&](bool success)
                          {
-                            workDone = true;
+                            ++test_stoppedCount;
                             QVERIFY(!success); });
-        taskProviderMock->m_tasks.append(testTask);
-        QObject::connect(transportServiceMock, &TransportServiceMock::receivedCalcTask, this,
-                         [this, transportServiceMock, testResult](const TransportServiceBase::PeerHandlerType peerHandler,
-                                                                  const CalcTask task)
-                         { (void)task; transportServiceMock->sendCalcResult(peerHandler, testResult); });
-        taskNode->start();
-        QTRY_VERIFY_WITH_TIMEOUT(workDone, 100);
-        QVERIFY(!taskProviderMock->m_testFail);
-        QVERIFY(!transportServiceMock->m_testFail);
-        QCOMPARE(taskProviderMock->m_results.length(), 0);
+
+        taskNode.start();
+        QTRY_COMPARE(test_stoppedCount, 1);
+        QTRY_COMPARE(test_taskProviderMock->m_loadNextTaskCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_disconnectAllPeersCount, 1);
     }
     void FormatErrorTest()
     {
-        const auto testTask = CalcTask("sin(x)", {"0", "1"}, true);
-        const auto testResult = CalcResult({"1", "2"}, true);
-        auto transportServiceMock = new TransportServiceMock();
-        auto taskProviderMock = new TaskProviderMock();
-        taskProviderMock->m_formatError = true;
-        auto taskNode = new TaskNode(transportServiceMock, taskProviderMock, "127.0.0.1:3333", 10, 1, this);
-        bool workDone = false;
-        QObject::connect(taskNode, &TaskNode::stopped, this, [this, &workDone](bool success)
+        QString test_peerInfo = "127.0.0.1:3333";
+        const auto test_task = CalcTask("sin(x)", {"0", "1"}, true);
+        const auto test_result = CalcResult({"1", "2"}, true);
+        TransportServiceBase::PeerHandlerType test_peerHandler = "1234";
+        Handshake test_handshake(Handshake::PeerType::CompNode, "1000", "{12345-4-5-6}");
+        auto test_taskProviderMock = new TaskProviderMock;
+        test_taskProviderMock->m_loadNextTask =
+            [&](TaskProviderMock *self)
+        {
+            emit self->taskLoadDone(test_task);
+        };
+        test_taskProviderMock->m_formatResult =
+            [&](TaskProviderMock *self, const CalcResult &result)
+        {
+            QCOMPARE(result, test_result);
+            emit self->resultFormatError(result);
+        };
+
+        auto test_transportServiceMock = new TransportServiceMock;
+        test_transportServiceMock->m_connectPeer =
+            [&](TransportServiceMock *self, const QString &peerInfo)
+        {
+            QCOMPARE(peerInfo, test_peerInfo);
+            emit self->newPeer(test_peerHandler, test_peerInfo, true);
+        };
+        test_transportServiceMock->m_sendHandshake =
+            [&](TransportServiceMock *self, const TransportServiceBase::PeerHandlerType &peerHandler, const Handshake &handshake)
+        {
+            QCOMPARE(peerHandler, test_peerHandler);
+            QCOMPARE(handshake.peerType, Handshake::PeerType::TaskNode);
+            QVERIFY(!handshake.uuid.isEmpty());
+            emit self->receivedHandshake(peerHandler, test_handshake);
+        };
+        test_transportServiceMock->m_sendCalcTask =
+            [&](TransportServiceMock *self, const TransportServiceBase::PeerHandlerType &peerHandler, const CalcTask &task)
+        {
+            QCOMPARE(peerHandler, test_peerHandler);
+            QCOMPARE(task, test_task);
+            emit self->receivedCalcResult(peerHandler, test_result);
+        };
+        test_transportServiceMock->m_disconnectPeer =
+            [&](TransportServiceMock *self, const TransportServiceBase::PeerHandlerType &peerHandler)
+        {
+            QCOMPARE(peerHandler, test_peerHandler);
+            emit self->peerDiconnected(peerHandler);
+        };
+
+        TaskNode taskNode(test_transportServiceMock, test_taskProviderMock, test_peerInfo, 10, 1);
+
+        int test_stoppedCount = 0;
+        QObject::connect(&taskNode, &TaskNode::stopped, this, [&](bool success)
                          {
-                            workDone = true;
+                            ++test_stoppedCount;
                             QVERIFY(!success); });
-        taskProviderMock->m_tasks.append(testTask);
-        QObject::connect(transportServiceMock, &TransportServiceMock::receivedCalcTask, this,
-                         [this, transportServiceMock, testResult](const TransportServiceBase::PeerHandlerType peerHandler,
-                                                                  const CalcTask task)
-                         { (void)task; transportServiceMock->sendCalcResult(peerHandler, testResult); });
-        taskNode->start();
-        QTRY_VERIFY_WITH_TIMEOUT(workDone, 100);
-        QVERIFY(!taskProviderMock->m_testFail);
-        QVERIFY(!transportServiceMock->m_testFail);
-        QCOMPARE(taskProviderMock->m_results.length(), 0);
+
+        taskNode.start();
+        QTRY_COMPARE(test_transportServiceMock->m_connectPeerCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_sendHandshakeCount, 1);
+        QTRY_COMPARE(test_taskProviderMock->m_loadNextTaskCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_sendCalcTaskCount, 1);
+        QTRY_COMPARE(test_taskProviderMock->m_formatResultCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_disconnectPeerCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_disconnectAllPeersCount, 1);
+        QTRY_COMPARE(test_stoppedCount, 1);
     }
     void ConnectErrorTest()
     {
-        const auto testTask = CalcTask("sin(x)", {"0", "1"}, true);
-        const auto testResult = CalcResult({"1", "2"}, true);
-        auto transportServiceMock = new TransportServiceMock();
-        auto taskProviderMock = new TaskProviderMock();
-        transportServiceMock->m_connectError = true;
-        const int maxConnectAttempts = 10;
-        auto taskNode = new TaskNode(transportServiceMock, taskProviderMock, "127.0.0.1:3333", maxConnectAttempts, 1, this);
-        bool workDone = false;
-        QObject::connect(taskNode, &TaskNode::stopped, this, [this, &workDone](bool success)
+        QString test_peerInfo = "127.0.0.1:3333";
+        const auto test_task = CalcTask("sin(x)", {"0", "1"}, true);
+        const auto test_result = CalcResult({"1", "2"}, true);
+        TransportServiceBase::PeerHandlerType test_peerHandler = "1234";
+        Handshake test_handshake(Handshake::PeerType::CompNode, "1000", "{12345-4-5-6}");
+        auto test_taskProviderMock = new TaskProviderMock;
+        test_taskProviderMock->m_loadNextTask =
+            [&](TaskProviderMock *self)
+        {
+            emit self->taskLoadDone(test_task);
+        };
+        test_taskProviderMock->m_formatResult =
+            [&](TaskProviderMock *self, const CalcResult &result)
+        {
+            QCOMPARE(result, test_result);
+            emit self->resultFormatError(result);
+        };
+
+        auto test_transportServiceMock = new TransportServiceMock;
+        test_transportServiceMock->m_connectPeer =
+            [&](TransportServiceMock *self, const QString &peerInfo)
+        {
+            QCOMPARE(peerInfo, test_peerInfo);
+            emit self->connectError(peerInfo);
+        };
+
+        TaskNode taskNode(test_transportServiceMock, test_taskProviderMock, test_peerInfo, 10, 1);
+
+        int test_stoppedCount = 0;
+        QObject::connect(&taskNode, &TaskNode::stopped, this, [&](bool success)
                          {
-                            workDone = true;
+                            ++test_stoppedCount;
                             QVERIFY(!success); });
-        taskProviderMock->m_tasks.append(testTask);
-        QObject::connect(transportServiceMock, &TransportServiceMock::receivedCalcTask, this,
-                         [this, transportServiceMock, testResult](const TransportServiceBase::PeerHandlerType peerHandler,
-                                                                  const CalcTask task)
-                         { (void)task; transportServiceMock->sendCalcResult(peerHandler, testResult); });
-        taskNode->start();
-        QTRY_VERIFY_WITH_TIMEOUT(workDone, 100);
-        QVERIFY(!taskProviderMock->m_testFail);
-        QVERIFY(!transportServiceMock->m_testFail);
-        QCOMPARE(taskProviderMock->m_results.length(), 0);
-        QCOMPARE(transportServiceMock->m_connectAttempts, maxConnectAttempts);
+
+        taskNode.start();
+        QTRY_COMPARE(test_transportServiceMock->m_connectPeerCount, 1);
+        QTRY_COMPARE(test_taskProviderMock->m_loadNextTaskCount, 1);
+        QTRY_COMPARE(test_transportServiceMock->m_disconnectAllPeersCount, 1);
+        QTRY_COMPARE(test_stoppedCount, 1);
     }
 };

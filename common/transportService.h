@@ -1,33 +1,41 @@
 #pragma once
 
-#include "../common/calcTask.h"
-#include <QObject>
-#include <QtNetwork/QTcpSocket>
-#include <QtNetwork/QTcpServer>
-#include <QtNetwork/QHostAddress>
-#include <QString>
-#include <QPointer>
+#include "transportServiceBase.h"
 
-class TransportService : public QObject
+#include "../common/serializerBase.h"
+#include "../common/encoderBase.h"
+
+#include <QSet>
+#include <QByteArray>
+#include <QJsonObject>
+
+class TransportService final : public TransportServiceBase
 {
-    Q_OBJECT
 public:
-    explicit TransportService(QObject *parent = nullptr);
-signals:
-    void newConnection(const QHostAddress IP, const quint64 port, const quint64 socketNum);
-    void receiveMainTask(const CalcTask &task, const quint64 socketNum);
-    void receiveMainResult(const QStringList &result, const quint64 socketNum);
-public slots:
-    void openConnection(const QHostAddress IP, const quint64 port);
-    void closeConnection(const quint64 socketNum);
-    void sendMainTask(const CalcTask &task, const quint64 socketNum);
-    void sendMainResult(const QStringList &result, const quint64 socketNum);
-    void startListening(const quint64 port);
-    void stopListening();
+    TransportService(TransportLayerBase *transportLayer,
+                     SerializerBase<QByteArray, QJsonObject> *serializer,
+                     EncoderBase<QByteArray> *encoder,
+                     QObject *parent = nullptr);
+    ~TransportService();
+
+    void sendHandshake(const PeerHandlerType &peerHandler, const Handshake &handshake) override final;
+    void sendCalcTask(const PeerHandlerType &peerHandler, const CalcTask &task) override final;
+    void sendCalcResult(const PeerHandlerType &peerHandler, const CalcResult &result) override final;
+    void connectPeer(const QString &peerInfo) override final;
+    void disconnectPeer(const PeerHandlerType &peerHandler) override final;
+    void disconnectAllPeers() override final;
+    QList<PeerHandlerType> peers() const override final;
+    void startListening() override final;
+    void stopListening() override final;
 
 private:
-    QTcpServer m_server;
-    QVector<QPointer<QTcpSocket>> m_socket;
-    QHostAddress m_address;
-    quint64 m_port;
+    void onNewConnection(const PeerHandlerType peerHandler, const QString peerInfo, bool outgoing);
+    void onConnectionClosed(const PeerHandlerType peerHandler);
+    void onConnectError(const QString peerInfo);
+    void onDataReceived(const PeerHandlerType peerHandler, const QByteArray data);
+
+    TransportLayerBase *m_transportLayer;
+    SerializerBase<QByteArray, QJsonObject> *m_serializer;
+    EncoderBase<QByteArray> *m_encoder;
+    QSet<PeerHandlerType> m_peers;
 };

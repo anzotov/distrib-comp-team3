@@ -3,6 +3,7 @@
 #include "../common/jsonSerializer.h"
 #include "../common/calcTask.h"
 #include "../common/calcResult.h"
+#include "../common/handshake.h"
 
 #include <QObject>
 #include <QJsonObject>
@@ -48,32 +49,32 @@ private slots:
 
     void CalcTaskSerializationTest()
     {
-        bool success = false;
         const auto serializer = JsonSerializer();
         const auto task = CalcTask{"sin(x)", {"0", "1"}, true};
         const auto array = serializer.serialize(task);
         serializer.deserialize<CalcTask>(array, [&](CalcTask *obj)
                                          {
-                                            if (obj->function == task.function && obj->data == task.data && obj->isMain==task.isMain)
-                                            {
-                                                success = true;
-                                            };
+                                            QCOMPARE(*obj, task);
                                             delete obj; });
-        QVERIFY(success);
     }
     void CalcResultSerializationTest()
     {
-        bool success = false;
         const auto serializer = JsonSerializer();
-        const auto task = CalcResult{{"0", "1"}, true};
-        const auto array = serializer.serialize(task);
+        const auto result = CalcResult{{"0", "1"}, true};
+        const auto array = serializer.serialize(result);
         serializer.deserialize<CalcResult>(array, [&](CalcResult *obj)
                                            {
-                                            if (obj->data == task.data && obj->isMain==task.isMain)
-                                            {
-                                                success = true;
-                                            };
+                                            QCOMPARE(*obj, result);
                                             delete obj; });
-        QVERIFY(success);
+    }
+    void HandshakeSerializationTest()
+    {
+        const auto serializer = JsonSerializer();
+        const auto handshake = Handshake(Handshake::PeerType::TaskNode, "1000", "{12345-3-45-6}");
+        const auto array = serializer.serialize(handshake);
+        serializer.deserialize<Handshake>(array, [&](Handshake *obj)
+                                           {
+                                            QCOMPARE(*obj, handshake);
+                                            delete obj; });
     }
 };

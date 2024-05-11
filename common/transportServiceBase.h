@@ -3,6 +3,7 @@
 #include "../common/handshake.h"
 #include "../common/calcResult.h"
 #include "../common/calcTask.h"
+#include "transportLayerBase.h"
 
 #include <QObject>
 #include <QList>
@@ -13,7 +14,7 @@ class TransportServiceBase : public QObject
 {
     Q_OBJECT
 public:
-    using PeerHandlerType = QString;
+    using PeerHandlerType = TransportLayerBase::PeerHandlerType;
     TransportServiceBase(QObject *parent = nullptr) : QObject(parent) {}
     virtual ~TransportServiceBase() = default;
 signals:

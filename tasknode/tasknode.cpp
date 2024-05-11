@@ -1,6 +1,7 @@
 #include "tasknode.h"
 #include <QTimer>
 #include <QtGlobal>
+#include <QUuid>
 #include <stdexcept>
 
 TaskNode::TaskNode(TransportServiceBase *transportServiceBase,
@@ -90,7 +91,7 @@ void TaskNode::onNoTasksAvailable()
 void TaskNode::sendHandshake(const TransportServiceBase::PeerHandlerType &peerHandler)
 {
     qInfo() << "TaskNode: sending handshake";
-    m_transportServiceBase->sendHandshake(peerHandler, {Handshake::PeerType::TaskNode, ""});
+    m_transportServiceBase->sendHandshake(peerHandler, Handshake(Handshake::PeerType::TaskNode, "", QUuid::createUuid().toString()));
 }
 
 void TaskNode::onNewPeer(const TransportServiceBase::PeerHandlerType peerHandler, const QString peerInfo, bool outgoing)

@@ -18,4 +18,12 @@ struct DiscoveryData final
     {
         return QStringLiteral("DiscoveryData(%1, {%2})").arg(uuid).arg(connectInfo.join(","));
     }
+    bool operator==(const DiscoveryData &other) const
+    {
+        return this == &other || (uuid == other.uuid && connectInfo == other.connectInfo);
+    }
+    bool operator!=(const DiscoveryData &other) const
+    {
+        return !(*this == other);
+    }
 };

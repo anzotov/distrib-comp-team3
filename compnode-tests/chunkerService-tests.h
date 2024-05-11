@@ -106,9 +106,7 @@ private slots:
                 emit calculatorServiceMock->calcDone(CalcResult({"0", "1"}, task.isMain));
                 return;
             }
-            QCOMPARE(task.function, test_myChunk.function);
-            QCOMPARE(task.data, test_myChunk.data);
-            QCOMPARE(task.isMain, test_myChunk.isMain);
+            QCOMPARE(task, test_myChunk);
             emit calculatorServiceMock->calcDone(test_myChunkResult);
         };
         ChunkerService chunkerService(calculatorServiceMock);
@@ -118,8 +116,7 @@ private slots:
                          {
                              ++calcResultCount;
                              QCOMPARE(peerHandler, test_taskNodeHandler);
-                             QCOMPARE(result.data, test_result.data);
-                             QCOMPARE(result.isMain, test_result.isMain);
+                             QCOMPARE(result, test_result);
                          });
         int sendChunkedTaskCount = 0;
         QObject::connect(&chunkerService, &ChunkerService::sendChunkedTask, this,
@@ -127,9 +124,7 @@ private slots:
                          {
                              ++sendChunkedTaskCount;
                              QCOMPARE(peerHandler, test_peerHandler);
-                             QCOMPARE(task.function, test_peerChunk.function);
-                             QCOMPARE(task.data, test_peerChunk.data);
-                             QCOMPARE(task.isMain, test_peerChunk.isMain);
+                             QCOMPARE(task, test_peerChunk);
                              chunkerService.processChunkedResult(peerHandler, test_peerChunkResult);
                          });
         chunkerService.start();
@@ -156,9 +151,7 @@ private:
                 emit calculatorServiceMock->calcDone(CalcResult({"0", "1"}, task.isMain));
                 return;
             }
-            QCOMPARE(task.function, test_task.function);
-            QCOMPARE(task.data, test_task.data);
-            QCOMPARE(task.isMain, test_task.isMain);
+            QCOMPARE(task, test_task);
             emit calculatorServiceMock->calcDone(test_result);
         };
         ChunkerService chunkerService(calculatorServiceMock);
@@ -168,8 +161,7 @@ private:
                          {
                              ++calcResultCount;
                              QCOMPARE(peerHandler, test_taskNodeHandler);
-                             QCOMPARE(result.data, test_result.data);
-                             QCOMPARE(result.isMain, test_result.isMain);
+                             QCOMPARE(result, test_result);
                          });
         chunkerService.start();
         QTRY_COMPARE(calculatorServiceMock->m_calculateCount, 1);

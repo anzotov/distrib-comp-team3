@@ -6,7 +6,7 @@
 template <class ArrayType, class IntermediateType>
 struct SerializerBase
 {
-    ~SerializerBase() = default;
+    virtual ~SerializerBase() = default;
     template <class T>
     ArrayType serialize(const T &object) const
     {

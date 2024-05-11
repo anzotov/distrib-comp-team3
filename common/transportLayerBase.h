@@ -14,7 +14,7 @@ public:
     TransportLayerBase(QObject *parent = nullptr) : QObject(parent) {}
     virtual ~TransportLayerBase() = default;
 signals:
-    void newConnection(const PeerHandlerType peerHandler, const QString peerInfo);
+    void newConnection(const PeerHandlerType peerHandler, const QString peerInfo, bool outgoing);
     void connectionClosed(const PeerHandlerType peerHandler);
     void connectError(const QString peerInfo);
     void dataReceived(const PeerHandlerType peerHandler, const QByteArray data);

@@ -148,17 +148,14 @@ private slots:
         test_peerServiceMock->m_sendCalcTask =
             [&](PeerServiceMock *self, const PeerHandlerType &peerHandler, const CalcTask &task)
         {
-            QCOMPARE(task.function, test_chunkedTask.function);
-            QCOMPARE(task.data, test_chunkedTask.data);
-            QCOMPARE(task.isMain, test_chunkedTask.isMain);
+            QCOMPARE(task, test_chunkedTask);
             emit self->receivedCalcResult(peerHandler, test_chunkedResult);
         };
         test_peerServiceMock->m_sendCalcResult =
             [&](PeerServiceMock *, const PeerHandlerType &peerHandler, const CalcResult &result)
         {
             QCOMPARE(peerHandler, test_taskNodeHandler);
-            QCOMPARE(result.data, test_result.data);
-            QCOMPARE(result.isMain, test_result.isMain);
+            QCOMPARE(result, test_result);
         };
         test_peerServiceMock->m_peers =
             [&](const PeerServiceMock *)
@@ -176,9 +173,7 @@ private slots:
             [&](ChunkerServiceMock *self, const PeerHandlerType &peerHandler, const CalcTask &task)
         {
             QCOMPARE(peerHandler, test_taskNodeHandler);
-            QCOMPARE(task.function, test_task.function);
-            QCOMPARE(task.data, test_task.data);
-            QCOMPARE(task.isMain, test_task.isMain);
+            QCOMPARE(task, test_task);
             for (const auto &peer : test_peers)
             {
                 emit self->sendChunkedTask(peer.peerHandler, test_chunkedTask);
@@ -190,17 +185,14 @@ private slots:
             QCOMPARE(peers.size(), test_peers.size());
             for (int i = 0; i < peers.size(); ++i)
             {
-                QCOMPARE(peers.at(i).peerHandler, test_peers.at(i).peerHandler);
-                QCOMPARE(peers.at(i).compPower, test_peers.at(i).compPower);
-                QCOMPARE(peers.at(i).connectionSpeed, test_peers.at(i).connectionSpeed);
+                QCOMPARE(peers.at(i), test_peers.at(i));
             }
         };
         test_chunkerServiceMock->m_processChunkedResult =
             [&](ChunkerServiceMock *self, const PeerHandlerType &peerHandler, const CalcResult &result)
         {
             ++test_chunkedResultsReceived;
-            QCOMPARE(result.data, test_chunkedResult.data);
-            QCOMPARE(result.isMain, test_chunkedResult.isMain);
+            QCOMPARE(result, test_chunkedResult);
 
             bool found_peer = false;
             for (const auto &peer : test_peers)
@@ -274,9 +266,7 @@ private slots:
             [&](ChunkerServiceMock *self, const PeerHandlerType &peerHandler, const CalcTask &task)
         {
             QCOMPARE(peerHandler, test_taskNodeHandler);
-            QCOMPARE(task.function, test_task.function);
-            QCOMPARE(task.data, test_task.data);
-            QCOMPARE(task.isMain, test_task.isMain);
+            QCOMPARE(task, test_task);
             emit self->calcError();
         };
         test_chunkerServiceMock->m_updatePeers =
@@ -343,9 +333,7 @@ private slots:
             [&](ChunkerServiceMock *, const PeerHandlerType &peerHandler, const CalcTask &task)
         {
             QCOMPARE(peerHandler, test_taskNodeHandler);
-            QCOMPARE(task.function, test_task.function);
-            QCOMPARE(task.data, test_task.data);
-            QCOMPARE(task.isMain, test_task.isMain);
+            QCOMPARE(task, test_task);
             emit test_peerServiceMock->taskNodeDisconnected(peerHandler);
         };
         test_chunkerServiceMock->m_updatePeers =

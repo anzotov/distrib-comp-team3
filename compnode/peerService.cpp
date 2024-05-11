@@ -89,7 +89,7 @@ QList<PeerInfo> PeerService::peers() const
     {
         if (peer.handshake.peerType == Handshake::PeerType::CompNode)
         {
-            list.append(PeerInfo{peer.transportHandlers.first(), peer.handshake.compPower, ""});
+            list.append(PeerInfo{peer.handshake.uuid, peer.handshake.compPower, ""});
         }
     }
     return list;
@@ -98,6 +98,10 @@ QList<PeerInfo> PeerService::peers() const
 void PeerService::onReceivedHandshake(const TransportServiceBase::PeerHandlerType peerHandler, const Handshake handshake)
 {
     qDebug() << QStringLiteral("PeerService: onReceivedHandshake(%1, %2)").arg(peerHandler).arg(handshake.toQString());
+    if (m_outboundConnections.contains(peerHandler))
+    {
+        removeConnectRequest(m_outboundConnections[peerHandler]);
+    }
     if (!m_uuidToRecordMap.contains(handshake.uuid))
     {
         m_uuidToRecordMap.insert(handshake.uuid, PeerRecord(handshake));
@@ -112,6 +116,10 @@ void PeerService::onReceivedHandshake(const TransportServiceBase::PeerHandlerTyp
 
     record.transportHandlers.append(peerHandler);
     m_transportHandlerToUuidMap.insert(peerHandler, handshake.uuid);
+    if (handshake.peerType == Handshake::PeerType::CompNode)
+    {
+        emit peersChanged(peers());
+    }
 }
 
 void PeerService::onReceivedCalcTask(const TransportServiceBase::PeerHandlerType peerHandler, const CalcTask task)
@@ -141,7 +149,7 @@ void PeerService::onNewPeer(const TransportServiceBase::PeerHandlerType peerHand
     qDebug() << QStringLiteral("PeerService: onNewPeer(%1, %2, %3)").arg(peerHandler).arg(peerInfo).arg(outgoing);
     if (outgoing)
     {
-        removeConnectRequest(peerInfo);
+        m_outboundConnections.insert(peerHandler, peerInfo);
     }
     m_transportService->sendHandshake(peerHandler, Handshake(Handshake::PeerType::CompNode, m_compPower, m_discoveryData.uuid));
 }
@@ -149,6 +157,7 @@ void PeerService::onNewPeer(const TransportServiceBase::PeerHandlerType peerHand
 void PeerService::onPeerDiconnected(const TransportServiceBase::PeerHandlerType peerHandler)
 {
     qDebug() << QStringLiteral("PeerService: onPeerDiconnected(%1)").arg(peerHandler);
+    m_outboundConnections.remove(peerHandler);
     if (!m_transportHandlerToUuidMap.contains(peerHandler))
         return;
 

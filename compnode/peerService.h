@@ -8,7 +8,7 @@
 class PeerService final : public PeerServiceBase
 {
 public:
-    PeerService(TransportServiceBase *transportService, DiscoveryServiceBase* discoveryService, DiscoveryData discoveryData, QObject *parent = nullptr);
+    PeerService(TransportServiceBase *transportService, DiscoveryServiceBase *discoveryService, DiscoveryData discoveryData, QObject *parent = nullptr);
     ~PeerService();
 
     void start(const QString &compPower) override final;
@@ -36,10 +36,11 @@ private:
     void onPeersChanged(const QList<DiscoveryData> peers);
 
     TransportServiceBase *m_transportService;
-    DiscoveryServiceBase* m_discoveryService;
+    DiscoveryServiceBase *m_discoveryService;
     QString m_compPower;
     DiscoveryData m_discoveryData;
     QMap<QString, PeerRecord> m_uuidToRecordMap;
     QMap<TransportServiceBase::PeerHandlerType, QString> m_transportHandlerToUuidMap;
     QSet<QString> m_connectRequests;
+    QMap<TransportServiceBase::PeerHandlerType, QString> m_outboundConnections;
 };
