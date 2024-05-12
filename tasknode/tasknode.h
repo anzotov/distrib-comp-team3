@@ -32,7 +32,6 @@ private:
     enum class State
     {
         Stopped,
-        Started,
         TaskRequested,
         ConnectionRequested,
         HandshakeSent,

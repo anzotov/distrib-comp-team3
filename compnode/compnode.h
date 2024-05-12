@@ -42,5 +42,5 @@ private:
     State m_state = State::Stopped;
     PeerServiceBase *m_peerService;
     ChunkerServiceBase *m_chunkerService;
-    PeerHandlerType m_taskNodeHandler;
+    PeerHandlerType m_taskSourceHandler;
 };

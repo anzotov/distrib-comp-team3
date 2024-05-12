@@ -14,7 +14,7 @@ QJsonObject JsonSerializer::deserialize_array(const QByteArray &array) const
     auto document = QJsonDocument::fromJson(array, &error);
     if (document.isNull())
     {
-        throw std::logic_error(qPrintable(QStringLiteral("JsonSerializer parse error: ") + error.errorString()));
+        throw DeserializationError(qPrintable(QStringLiteral("json parse error: ") + error.errorString()));
     }
     return document.object();
 }

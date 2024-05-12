@@ -1,88 +1,12 @@
 #pragma once
 
-#include "../common/transportService.h"
 #include "../common/jsonSerializer.h"
-#include "../common/encoderBase.h"
+#include "encoderMock.h"
+#include "transportLayerMock.h"
+#include "../common-tests/qtest-toString.h"
 
 #include <QObject>
 #include <QTest>
-#include <functional>
-
-struct EncoderMock final : EncoderBase<QByteArray>
-{
-    QByteArray encode(const QByteArray &array) const override final
-    {
-        ++m_encodeCount;
-        return m_encode(this, array);
-    }
-    QByteArray decode(const QByteArray &array) const override final
-    {
-        ++m_decodeCount;
-        return m_decode(this, array);
-    }
-
-    std::function<QByteArray(const EncoderMock *, const QByteArray &)> m_encode;
-    mutable int m_encodeCount = 0;
-    std::function<QByteArray(const EncoderMock *, const QByteArray &)> m_decode;
-    mutable int m_decodeCount = 0;
-};
-
-struct TransportLayerMock final : TransportLayerBase
-{
-    TransportLayerMock(QObject *parent = nullptr) : TransportLayerBase(parent)
-    {
-        if (m_contructor)
-            m_contructor(this);
-    }
-    ~TransportLayerMock()
-    {
-        if (m_destructor)
-            m_destructor(this);
-    }
-    void sendData(const PeerHandlerType peerHandler, const QByteArray &data) override final
-    {
-        ++m_sendDataCount;
-        if (m_sendData)
-            m_sendData(this, peerHandler, data);
-    }
-    void openConnection(const QString &peerInfo) override final
-    {
-        ++m_openConnectionCount;
-        if (m_openConnection)
-            m_openConnection(this, peerInfo);
-    }
-    void closeConnection(const PeerHandlerType peerHandler) override final
-    {
-        ++m_closeConnectionCount;
-        if (m_closeConnection)
-            m_closeConnection(this, peerHandler);
-    }
-    void startListening()
-    {
-        ++m_startListeningCount;
-        if (m_startListening)
-            m_startListening(this);
-    }
-    void stopListening()
-    {
-        ++m_stopListeningCount;
-        if (m_stopListening)
-            m_stopListening(this);
-    }
-
-    std::function<void(TransportLayerMock *)> m_contructor;
-    std::function<void(TransportLayerMock *)> m_destructor;
-    std::function<void(TransportLayerMock *, const PeerHandlerType, const QByteArray &)> m_sendData;
-    int m_sendDataCount = 0;
-    std::function<void(TransportLayerMock *, const QString &)> m_openConnection;
-    int m_openConnectionCount = 0;
-    std::function<void(TransportLayerMock *, const PeerHandlerType)> m_closeConnection;
-    int m_closeConnectionCount = 0;
-    std::function<void(TransportLayerMock *)> m_startListening;
-    int m_startListeningCount = 0;
-    std::function<void(TransportLayerMock *)> m_stopListening;
-    int m_stopListeningCount = 0;
-};
 
 class TransportServiceTestCase : public QObject
 {
@@ -93,15 +17,24 @@ private slots:
         QString test_peerInfo = "127.0.0.1:3333";
         TransportLayerBase::PeerHandlerType test_peerHandler = "123";
         Handshake test_handshake(Handshake::PeerType::CompNode, "1000", "{1234-5-6-7}");
+        CalcTask test_task("sin(x)", {"5", "6"}, true);
+        CalcResult test_result({"1", "2"}, true);
         auto test_transportLayerMock = new TransportLayerMock;
         test_transportLayerMock->m_openConnection =
-            [&](TransportLayerMock *, const QString &peerInfo)
+            [&](TransportLayerMock *self, const QString &peerInfo)
         {
             QCOMPARE(peerInfo, test_peerInfo);
+            emit self->newConnection(test_peerHandler, test_peerInfo, true);
         };
-        test_transportLayerMock->m_sendData = [&](TransportLayerMock *, const TransportLayerMock::PeerHandlerType peerHandler, const QByteArray &data)
+        test_transportLayerMock->m_sendData = [&](TransportLayerMock *self, const TransportLayerMock::PeerHandlerType &peerHandler, const QByteArray &data)
         {
-            emit test_transportLayerMock->dataReceived(peerHandler, data);
+            emit self->dataReceived(peerHandler, data);
+        };
+        test_transportLayerMock->m_closeConnection =
+            [&](TransportLayerMock *self, const TransportLayerBase::PeerHandlerType &peerHandler)
+        {
+            QCOMPARE(peerHandler, test_peerHandler);
+            emit self->connectionClosed(peerHandler);
         };
 
         auto test_encoder = new EncoderMock;
@@ -135,15 +68,65 @@ private slots:
                              QCOMPARE(peerHandler, test_peerHandler);
                              QCOMPARE(handshake, test_handshake);
                          });
+        int test_receivedCalcTaskCount = 0;
+        QObject::connect(&test_transportService, &TransportService::receivedCalcTask, this,
+                         [&](const TransportServiceBase::PeerHandlerType peerHandler, const CalcTask task)
+                         {
+                             ++test_receivedCalcTaskCount;
+                             QCOMPARE(peerHandler, test_peerHandler);
+                             QCOMPARE(task, test_task);
+                         });
+        int test_receivedCalcResultCount = 0;
+        QObject::connect(&test_transportService, &TransportService::receivedCalcResult, this,
+                         [&](const TransportServiceBase::PeerHandlerType peerHandler, const CalcResult result)
+                         {
+                             ++test_receivedCalcResultCount;
+                             QCOMPARE(peerHandler, test_peerHandler);
+                             QCOMPARE(result, test_result);
+                         });
+        int test_peerDiconnectedCount = 0;
+        QObject::connect(&test_transportService, &TransportService::peerDiconnected, this,
+                         [&](const TransportService::PeerHandlerType peerHandler)
+                         {
+                             ++test_peerDiconnectedCount;
+                             QCOMPARE(peerHandler, test_peerHandler);
+                         });
 
         test_transportService.startListening();
         QTRY_COMPARE(test_transportLayerMock->m_startListeningCount, 1);
+
         test_transportService.connectPeer(test_peerInfo);
         QTRY_COMPARE(test_transportLayerMock->m_openConnectionCount, 1);
-        emit test_transportLayerMock->newConnection(test_peerHandler, test_peerInfo, true);
         QTRY_COMPARE(test_newPeerCount, 1);
+        QCOMPARE(test_transportService.peers(), {test_peerHandler});
+
         test_transportService.sendHandshake(test_peerHandler, test_handshake);
         QTRY_COMPARE(test_transportLayerMock->m_sendDataCount, 1);
+        QTRY_COMPARE(test_encoder->m_encodeCount, 1);
         QTRY_COMPARE(test_receivedHandshakeCount, 1);
+        QTRY_COMPARE(test_encoder->m_decodeCount, 1);
+
+        test_transportService.sendCalcTask(test_peerHandler, test_task);
+        QTRY_COMPARE(test_transportLayerMock->m_sendDataCount, 2);
+        QTRY_COMPARE(test_encoder->m_encodeCount, 2);
+        QTRY_COMPARE(test_receivedCalcTaskCount, 1);
+        QTRY_COMPARE(test_encoder->m_decodeCount, 2);
+
+        test_transportService.sendCalcResult(test_peerHandler, test_result);
+        QTRY_COMPARE(test_transportLayerMock->m_sendDataCount, 3);
+        QTRY_COMPARE(test_encoder->m_encodeCount, 3);
+        QTRY_COMPARE(test_receivedCalcResultCount, 1);
+        QTRY_COMPARE(test_encoder->m_decodeCount, 3);
+
+        test_transportService.disconnectPeer(test_peerHandler);
+        QTRY_COMPARE(test_transportLayerMock->m_closeConnectionCount, 1);
+        QTRY_COMPARE(test_peerDiconnectedCount, 1);
+
+        test_transportService.disconnectAllPeers();
+        QTRY_COMPARE(test_transportLayerMock->m_closeConnectionCount, 1);
+        QTRY_COMPARE(test_peerDiconnectedCount, 1);
+
+        test_transportService.stopListening();
+        QTRY_COMPARE(test_transportLayerMock->m_stopListeningCount, 1);
     }
 };

@@ -1,6 +1,8 @@
+#pragma once
+
 #include <QString>
-#include <functional>
 #include <QJsonObject>
+#include <functional>
 
 struct Handshake final
 {

@@ -69,18 +69,19 @@ void TransportService::disconnectAllPeers()
 
 QList<TransportServiceBase::PeerHandlerType> TransportService::peers() const
 {
+    qDebug() << "TransportService: peers()";
     return m_peers.values();
 }
 
 void TransportService::startListening()
 {
-    qDebug() << "TransportService: startListening";
+    qDebug() << "TransportService: startListening()";
     m_transportLayer->startListening();
 }
 
 void TransportService::stopListening()
 {
-    qDebug() << "TransportService: stopListening";
+    qDebug() << "TransportService: stopListening()";
     m_transportLayer->stopListening();
 }
 
@@ -111,17 +112,20 @@ void TransportService::onDataReceived(const PeerHandlerType peerHandler, const Q
     {
         m_serializer->deserialize<Handshake, CalcTask, CalcResult>(m_encoder->decode(data), [&](Handshake *object)
                                                                    {
-                                                                        emit receivedHandshake(peerHandler, *object);
-                                                                        delete object; }, [&](CalcTask *object)
+                                                                        auto obj = *object;
+                                                                        delete object;
+                                                                        emit receivedHandshake(peerHandler, obj); }, [&](CalcTask *object)
                                                                    {
-                                                                       emit receivedCalcTask(peerHandler, *object);
-                                                                       delete object; }, [&](CalcResult *object)
+                                                                        auto obj = *object;
+                                                                        delete object;
+                                                                        emit receivedCalcTask(peerHandler, obj); }, [&](CalcResult *object)
                                                                    {
-                                                                       emit receivedCalcResult(peerHandler, *object);
-                                                                       delete object; });
+                                                                        auto obj = *object;
+                                                                        delete object;
+                                                                        emit receivedCalcResult(peerHandler, obj); });
     }
-    catch (const std::logic_error &e)
+    catch (DeserializationError &e)
     {
-        qCritical() << e.what();
+        qCritical() << "Data deserialization error:" << e.what();
     }
 }

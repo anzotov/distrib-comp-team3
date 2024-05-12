@@ -23,7 +23,7 @@ private:
         PeerRecord() = default;
         PeerRecord(const Handshake &handshake) : handshake(handshake) {}
         Handshake handshake;
-        QList<TransportServiceBase::PeerHandlerType> transportHandlers;
+        QSet<TransportServiceBase::PeerHandlerType> transportHandlers;
     };
 
     void onReceivedHandshake(const TransportServiceBase::PeerHandlerType peerHandler, const Handshake handshake);

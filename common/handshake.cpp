@@ -12,7 +12,7 @@ QJsonObject Handshake::serialize() const
 
 bool Handshake::deserialize(const QJsonObject &input, std::function<void(Handshake *)> handler)
 {
-    if (input["class"].toString() != "Handshake")
+    if (input["class"].toString() != "Handshake" || !input["peerType"].isDouble() || !input["compPower"].isString() || !input["uuid"].isString())
         return false;
     auto task = new Handshake(
         PeerType{input["peerType"].toInt()},

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../tasknode/fileTaskProvider.h"
+#include "../common-tests/qtest-toString.h"
 
 #include <QObject>
 #include <QTest>

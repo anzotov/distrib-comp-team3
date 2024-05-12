@@ -28,7 +28,7 @@ ChunkerService::~ChunkerService()
 
 void ChunkerService::start()
 {
-    qInfo() << "ChunkerService: start";
+    qDebug() << "ChunkerService: start()";
     if (m_state != State::Stopped)
         throw std::logic_error("ChunkerService: need to stop before starting again");
     if (!m_compPower.isEmpty())
@@ -43,38 +43,40 @@ void ChunkerService::start()
 
 void ChunkerService::calculateTask(const PeerHandlerType &peerHandler, const CalcTask &task)
 {
-    qInfo() << "ChunkerService: calculating task";
+    qDebug() << QStringLiteral("ChunkerService: calculateTask(%1)").arg(peerHandler);
     if (m_state != State::Ready)
         return;
 
     m_taskSourceHandler = peerHandler;
     if (!task.isMain)
     {
+        qInfo() << "Calculating chunked task";
         m_state = State::ChunkTaskReceived;
         m_calculatorService->calculate(task);
         return;
     }
 
+    qInfo() << "Calculating task";
     m_state = State::MainTaskReceived;
     m_result.reset();
     m_resultChunks.clear();
+    m_resultChunksOrder.clear();
     m_peers.empty() ? m_calculatorService->calculate(task) : sliceTask(task);
 }
 
 void ChunkerService::sliceTask(const CalcTask &task)
 {
-    qInfo() << "ChunkerService: slicing task";
+    qDebug() << "ChunkerService: sliceTask()";
     QMap<PeerHandlerType, double> chunkCoefficients;
     double myCompPower = m_compPower.toDouble();
-    qDebug() << "My compPower: " << m_compPower;
+    qDebug() << "My computational power: " << m_compPower;
     for (const auto &peer : m_peers)
     {
-        qDebug() << QStringLiteral("Peer %1 compPower %2").arg(peer.peerHandler).arg(peer.compPower);
+        qDebug() << QStringLiteral("Peer %1 computational power: %2").arg(peer.peerHandler).arg(peer.compPower);
         double powerCoef = myCompPower / peer.compPower.toDouble();
         chunkCoefficients.insert(peer.peerHandler, powerCoef);
     }
     double normCoef = std::accumulate(chunkCoefficients.cbegin(), chunkCoefficients.cend(), 1);
-    qDebug() << "normCoef: " << normCoef;
 
     auto dataSize = task.data.size();
     CalcTask chunk(task.function, {}, false);
@@ -82,13 +84,13 @@ void ChunkerService::sliceTask(const CalcTask &task)
     for (const auto &peer : chunkCoefficients.keys())
     {
         int i = curItem;
-        for (; i < curItem + int(dataSize * chunkCoefficients[peer] / normCoef); ++i)
+        for (; (i < dataSize) && (i < curItem + int(dataSize * chunkCoefficients[peer] / normCoef)); ++i)
         {
-            chunk.data.append(task.data.at(curItem));
+            chunk.data.append(task.data.at(i));
         }
         m_resultChunks.insert(peer, {});
         m_resultChunksOrder.append(peer);
-        qDebug() << "Sending chunk to: " << peer;
+        qDebug() << QStringLiteral("Sending chunked task (%1 data entries) to: %2").arg(chunk.data.size()).arg(peer);
         emit sendChunkedTask(peer, chunk);
         curItem = i;
         chunk.data.clear();
@@ -97,58 +99,65 @@ void ChunkerService::sliceTask(const CalcTask &task)
     {
         chunk.data.append(task.data.at(curItem));
     }
+    qDebug() << QStringLiteral("Calculating my chunk (%1 data entries)").arg(chunk.data.size());
     m_calculatorService->calculate(chunk);
 }
 
 void ChunkerService::updatePeers(const QList<PeerInfo> &peers)
 {
-    qInfo() << "ChunkerService: updating peers";
+    qDebug() << "ChunkerService: updatePeers()";
     QMap<PeerHandlerType, PeerInfo> peersMap;
     for (const auto &peer : peers)
     {
         peersMap.insert(peer.peerHandler, peer);
     }
-    if (m_state != State::MainTaskReceived)
-    {
-        m_peers = peersMap;
-        return;
-    }
     bool isPeerMissing = false;
-    for (const auto &peer : m_peers.keys())
+    if (m_state == State::MainTaskReceived)
     {
-        if (!peersMap.contains(peer))
+        for (const auto &peer : m_resultChunks.keys())
         {
-            isPeerMissing = true;
-            break;
+            if (!peersMap.contains(peer))
+            {
+                qDebug() << QStringLiteral("Peer %1 disconnected, calculation can't be completed").arg(peer);
+                isPeerMissing = true;
+                break;
+            }
         }
+    }
+    else if (m_state == State::ChunkTaskReceived && !peersMap.contains(m_taskSourceHandler))
+    {
+        qDebug() << QStringLiteral("Task source peer %1 disconnected").arg(m_taskSourceHandler);
+        isPeerMissing = true;
     }
     m_peers = peersMap;
     if (isPeerMissing)
     {
+        qCritical() << "Peer(s) disconnected, calculation can't be completed";
         stopCalc();
     }
 }
 
 void ChunkerService::OnCalculatorServiceCalcDone(CalcResult result)
 {
+    qDebug() << "ChunkerService: OnCalculatorServiceCalcDone()";
     if (m_state == State::TestCalcRequested)
     {
-        qInfo() << "ChunkerService: test task done";
         std::chrono::nanoseconds taskTime = std::chrono::steady_clock::now() - m_taskStartTime;
         m_compPower = QStringLiteral("%1").arg(taskTime.count());
+        qDebug() << "My computational power:" << m_compPower;
         setStateReady();
         return;
     }
     if (m_state == State::ChunkTaskReceived)
     {
-        qInfo() << "ChunkerService: chunked task done";
+        qInfo() << "Chunked task calculated";
         m_state = State::Ready;
         emit calcResult(m_taskSourceHandler, result);
         return;
     }
     if (m_state == State::MainTaskReceived)
     {
-        qInfo() << "ChunkerService: my chunk done";
+        qInfo() << "My task chunk calculated";
         m_result = result;
         checkChunkedResult();
     }
@@ -156,10 +165,10 @@ void ChunkerService::OnCalculatorServiceCalcDone(CalcResult result)
 
 void ChunkerService::processChunkedResult(const PeerHandlerType &peerHandler, const CalcResult &result)
 {
-    qInfo() << "ChunkerService: chunked result received";
+    qDebug() << QStringLiteral("ChunkerService: processChunkedResult(%1)").arg(peerHandler);
     if (result.isMain == true)
     {
-        qCritical() << "ChunkerService: wrong result category";
+        qCritical() << "Wrong result type received";
         stopCalc();
     }
     else
@@ -171,6 +180,7 @@ void ChunkerService::processChunkedResult(const PeerHandlerType &peerHandler, co
 
 void ChunkerService::checkChunkedResult()
 {
+    qDebug() << "ChunkerService: checkChunkedResult()";
     if (!m_result.has_value())
         return;
     for (const auto &result : m_resultChunks)
@@ -191,6 +201,8 @@ void ChunkerService::checkChunkedResult()
 
 void ChunkerService::stopCalc()
 {
+    qDebug() << "ChunkerService: stopCalc()";
+    qInfo() << "Stopping calculation";
     m_state = State::Ready;
     m_calculatorService->stop();
     emit calcError();
@@ -198,7 +210,7 @@ void ChunkerService::stopCalc()
 
 void ChunkerService::setStateReady()
 {
-    qInfo() << "ChunkerService: ready";
+    qDebug() << "ChunkerService: setStateReady()";
     m_state = State::Ready;
     m_taskSourceHandler = "";
     emit ready(m_compPower);
@@ -206,7 +218,7 @@ void ChunkerService::setStateReady()
 
 void ChunkerService::stop()
 {
-    qInfo() << "ChunkerService: stop";
+    qDebug() << "ChunkerService: stop()";
     m_state = State::Stopped;
     m_calculatorService->stop();
 }

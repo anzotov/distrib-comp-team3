@@ -3,6 +3,7 @@
 #include "../compnode/jsCalculatorService.h"
 #include "../common/calcTask.h"
 #include "../common/calcResult.h"
+#include "../common-tests/qtest-toString.h"
 
 #include <QObject>
 #include <QTest>

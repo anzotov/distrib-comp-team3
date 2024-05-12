@@ -43,11 +43,12 @@ void FileTaskProvider::loadNextTask()
     qDebug() << "FileTaskProvider: loadNextTask()";
     if (m_taskLoaded)
     {
-        qInfo() << "FileTaskProvider: no tasks availvable";
+        qCritical() << "Unable to load task more than once";
         emit noTasksAvailable();
         return;
     }
 
+    qInfo() << "Loading task from" << (m_inputFile.fileName() == "-" ? "standard input" : "file");
     CalcTask task;
     {
         QTextStream inputStream(&m_inputFile);
@@ -66,7 +67,7 @@ void FileTaskProvider::loadNextTask()
 
         if (task.function.isEmpty() || task.data.isEmpty())
         {
-            qCritical() << "FileTaskProvider: Task load error";
+            qCritical() << "Input format error";
             emit taskLoadError();
             return;
         }
@@ -74,7 +75,6 @@ void FileTaskProvider::loadNextTask()
 
     m_inputFile.close();
     m_taskLoaded = true;
-    qInfo() << "FileTaskProvider: Task loaded successfully";
     emit taskLoadDone(task);
 }
 
@@ -83,10 +83,12 @@ void FileTaskProvider::formatResult(const CalcResult &result)
     qDebug() << "FileTaskProvider: formatResult()";
     if (m_resultFormatted)
     {
+        qCritical() << "Unable to save result more than once";
         emit resultFormatError(result);
         return;
     }
 
+    qInfo() << "Saving result to" << (m_outputFile.fileName() == "-" ? "standard output" : "file");
     {
         QTextStream outputSteam(&m_outputFile);
 
@@ -98,6 +100,5 @@ void FileTaskProvider::formatResult(const CalcResult &result)
 
     m_outputFile.close();
     m_resultFormatted = true;
-    qInfo() << "FileTaskProvider: result formatted successfully";
     emit resultFormatDone();
 }

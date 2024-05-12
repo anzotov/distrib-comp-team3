@@ -62,7 +62,7 @@ void PeerService::sendCalcTask(const PeerHandlerType &peerHandler, const CalcTas
         qCritical() << QStringLiteral("PeerService: no connections to %1").arg(peerHandler);
         return;
     }
-    m_transportService->sendCalcTask(recordIter->transportHandlers.first(), task);
+    m_transportService->sendCalcTask(recordIter->transportHandlers.values().first(), task);
 }
 
 void PeerService::sendCalcResult(const PeerHandlerType &peerHandler, const CalcResult &result)
@@ -79,7 +79,7 @@ void PeerService::sendCalcResult(const PeerHandlerType &peerHandler, const CalcR
         qCritical() << QStringLiteral("PeerService: no connections to %1").arg(peerHandler);
         return;
     }
-    m_transportService->sendCalcResult(recordIter->transportHandlers.first(), result);
+    m_transportService->sendCalcResult(recordIter->transportHandlers.values().first(), result);
 }
 
 QList<PeerInfo> PeerService::peers() const
@@ -114,7 +114,7 @@ void PeerService::onReceivedHandshake(const TransportServiceBase::PeerHandlerTyp
         return;
     }
 
-    record.transportHandlers.append(peerHandler);
+    record.transportHandlers.insert(peerHandler);
     m_transportHandlerToUuidMap.insert(peerHandler, handshake.uuid);
     if (handshake.peerType == Handshake::PeerType::CompNode)
     {
@@ -171,11 +171,7 @@ void PeerService::onPeerDiconnected(const TransportServiceBase::PeerHandlerType 
 
     m_transportHandlerToUuidMap.remove(peerHandler);
 
-    auto count = recordIter->transportHandlers.removeAll(peerHandler);
-    if (count != 1)
-    {
-        qWarning() << QStringLiteral("PeerService: wrong number of peerHandlers %1 : %2").arg(peerHandler).arg(count);
-    }
+    recordIter->transportHandlers.remove(peerHandler);
 
     if (recordIter->transportHandlers.isEmpty())
     {

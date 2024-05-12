@@ -16,7 +16,7 @@ QJsonObject CalcTask::serialize() const
 
 bool CalcTask::deserialize(const QJsonObject &input, std::function<void(CalcTask *)> handler)
 {
-    if (input["class"].toString() != "CalcTask")
+    if (input["class"].toString() != "CalcTask" || !input["function"].isString() || !input["data"].isArray() || !input["isMain"].isBool())
         return false;
     auto task = new CalcTask(
         input["function"].toString(),

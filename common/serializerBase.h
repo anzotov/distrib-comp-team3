@@ -3,9 +3,17 @@
 #include <functional>
 #include <stdexcept>
 
+struct DeserializationError final : std::logic_error
+{
+    DeserializationError(const std::string &what_arg) : std::logic_error(what_arg) {}
+    DeserializationError(const char *what_arg) : std::logic_error(what_arg) {}
+    DeserializationError(const DeserializationError &other) : std::logic_error(other) {}
+};
+
 template <class ArrayType, class IntermediateType>
 struct SerializerBase
 {
+
     virtual ~SerializerBase() = default;
     template <class T>
     ArrayType serialize(const T &object) const
@@ -37,7 +45,7 @@ protected:
         }
         else
         {
-            throw std::logic_error("SerializerBase deserialization: unknown object");
+            throw DeserializationError("Unknown object");
         }
     }
 };

@@ -56,7 +56,7 @@ void CompNode::onPeersChanged(const QList<PeerInfo> peers)
 
 void CompNode::onTaskNodeDisconnected(const PeerHandlerType peerHandler)
 {
-    if (m_state == State::TaskReceived && peerHandler == m_taskNodeHandler)
+    if (m_state == State::TaskReceived && peerHandler == m_taskSourceHandler)
     {
         restartNode();
     }
@@ -68,7 +68,7 @@ void CompNode::onReceivedCalcTask(const PeerHandlerType peerHandler, const CalcT
     {
         qInfo() << "CompNode: Received CalcTask";
         m_state = State::TaskReceived;
-        m_taskNodeHandler = peerHandler;
+        m_taskSourceHandler = peerHandler;
         m_chunkerService->calculateTask(peerHandler, task);
     }
 }
