@@ -18,10 +18,10 @@ bool CalcTask::deserialize(const QJsonObject &input, std::function<void(CalcTask
 {
     if (input["class"].toString() != "CalcTask" || !input["function"].isString() || !input["data"].isArray() || !input["isMain"].isBool())
         return false;
-    auto task = new CalcTask(
+    auto object = new CalcTask(
         input["function"].toString(),
         QVariant(input["data"].toArray().toVariantList()).toStringList(),
         input["isMain"].toBool());
-    handler(task);
+    handler(object);
     return true;
 }

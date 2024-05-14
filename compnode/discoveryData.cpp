@@ -15,9 +15,9 @@ bool DiscoveryData::deserialize(const QJsonObject &input, std::function<void(Dis
 {
     if (input["class"].toString() != "DiscoveryData" || !input["uuid"].isString() || !input["connectInfo"].isArray())
         return false;
-    auto task = new DiscoveryData(
+    auto object = new DiscoveryData(
         input["uuid"].toString(),
         QVariant(input["connectInfo"].toArray().toVariantList()).toStringList());
-    handler(task);
+    handler(object);
     return true;
 }
