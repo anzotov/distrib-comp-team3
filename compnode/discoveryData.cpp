@@ -13,7 +13,7 @@ QJsonObject DiscoveryData::serialize() const
 
 bool DiscoveryData::deserialize(const QJsonObject &input, std::function<void(DiscoveryData *)> handler)
 {
-    if (input["class"].toString() != "DiscoveryData")
+    if (input["class"].toString() != "DiscoveryData" || !input["uuid"].isString() || !input["connectInfo"].isArray())
         return false;
     auto task = new DiscoveryData(
         input["uuid"].toString(),
