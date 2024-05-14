@@ -1,5 +1,7 @@
 #include "transportService.h"
 
+#include "safeHandler.h"
+
 TransportService::TransportService(TransportLayerBase *transportLayer,
                                    SerializerBase<QByteArray, QJsonObject> *serializer,
                                    EncoderBase<QByteArray> *encoder,
@@ -110,19 +112,19 @@ void TransportService::onDataReceived(const PeerHandlerType peerHandler, const Q
     qDebug() << QStringLiteral("TransportService: onDataReceived(%1)").arg(peerHandler);
     try
     {
-        m_serializer->deserialize<Handshake, CalcTask, CalcResult>(m_encoder->decode(data), [&](Handshake *object)
-                                                                   {
+        m_serializer->deserialize<Handshake, CalcTask, CalcResult>(m_encoder->decode(data),
+                                                                   makeSafeHandler<Handshake>([&](std::unique_ptr<Handshake> object)
+                                                                                              {
                                                                         auto obj = *object;
-                                                                        delete object;
-                                                                        emit receivedHandshake(peerHandler, obj); }, [&](CalcTask *object)
-                                                                   {
+                                                                        emit receivedHandshake(peerHandler, obj); }),
+                                                                   makeSafeHandler<CalcTask>([&](std::unique_ptr<CalcTask> object)
+                                                                                             {
                                                                         auto obj = *object;
-                                                                        delete object;
-                                                                        emit receivedCalcTask(peerHandler, obj); }, [&](CalcResult *object)
-                                                                   {
+                                                                        emit receivedCalcTask(peerHandler, obj); }),
+                                                                   makeSafeHandler<CalcResult>([&](std::unique_ptr<CalcResult> object)
+                                                                                               {
                                                                         auto obj = *object;
-                                                                        delete object;
-                                                                        emit receivedCalcResult(peerHandler, obj); });
+                                                                        emit receivedCalcResult(peerHandler, obj); }));
     }
     catch (DeserializationError &e)
     {
