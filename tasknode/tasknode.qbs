@@ -11,12 +11,28 @@ QtApplication {
 
     consoleApplication: true
     files: [
+        "main.cpp",
+        "tasknode.h",
+        "tasknode.cpp",
+        "taskProvider.h",
+        "fileTaskProvider.h",
+        "fileTaskProvider.cpp",
         "../common/logMessageHandler.cpp",
         "../common/transportService.h",
         "../common/transportService.cpp",
-        "tasknode.h",
-        "tasknode.cpp",
-        "main.cpp",
+        "../common/transportServiceBase.h",
+        "../common/calcResult.cpp",
+        "../common/calcTask.cpp",
+        "../common/handshake.cpp",
+        "../common/jsonSerializer.h",
+        "../common/jsonSerializer.cpp",
+        "../common/serializerBase.h",
+        "../common/encoderBase.h",
+        "../common/compressor.h",
+        "../common/compressor.cpp",
+        "../common/transportLayerBase.h",
+        "../common/transportLayer.h",
+        // "../common/transportLayer.cpp",
     ]
 
     Group {     // Properties for the produced executable

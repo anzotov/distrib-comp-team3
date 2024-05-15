@@ -1,7 +1,7 @@
 #include "discoveryService.h"
 
 #include "discoveryData.h"
-#include "common/safeHandler.h"
+#include "../common/safeHandler.h"
 
 #include <QNetworkDatagram>
 
@@ -21,8 +21,16 @@ DiscoveryService::DiscoveryService(SerializerBase<QByteArray, QJsonObject> *seri
     {
         throw std::runtime_error("DiscoveryService: not all dependencies were satisfied");
     }
-    m_socket.bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress);
-    m_socket.joinMulticastGroup(multicastAddress);
+    if (
+        !m_socket.bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress))
+    {
+        throw std::runtime_error("DiscoveryService: unable to bind socket");
+    }
+    if (
+        !m_socket.joinMulticastGroup(multicastAddress))
+    {
+        throw std::runtime_error("DiscoveryService: unable to join multicast group");
+    }
     connect(&m_socket, &QIODevice::readyRead, this, &DiscoveryService::onReadyRead);
 
     m_timer.setInterval(multicastPeriod);
