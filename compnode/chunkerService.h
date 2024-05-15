@@ -36,7 +36,7 @@ private:
     void stopCalc();
 
     State m_state = State::Stopped;
-    CalculatorServiceBase *m_calculatorService;
+    CalculatorServiceBase *m_calculatorService = nullptr;
     CalcTask m_testTask;
     QString m_compPower;
     std::chrono::steady_clock::time_point m_taskStartTime;

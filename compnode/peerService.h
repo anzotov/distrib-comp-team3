@@ -35,8 +35,8 @@ private:
     void removeConnectRequest(const QString &peerInfo);
     void onPeersChanged(const QList<DiscoveryData> peers);
 
-    TransportServiceBase *m_transportService;
-    DiscoveryServiceBase *m_discoveryService;
+    TransportServiceBase *m_transportService = nullptr;
+    DiscoveryServiceBase *m_discoveryService = nullptr;
     QString m_compPower;
     DiscoveryData m_discoveryData;
     QMap<QString, PeerRecord> m_uuidToRecordMap;

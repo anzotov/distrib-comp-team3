@@ -9,7 +9,7 @@ class DiscoveryServiceBase : public QObject
 
 public:
     DiscoveryServiceBase(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~DiscoveryServiceBase() = default;
+    
     virtual void startMulticast(const DiscoveryData &discoveryData) = 0;
     virtual void startListening() = 0;
     virtual void stopListening() = 0;

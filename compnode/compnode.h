@@ -40,7 +40,7 @@ private:
     void restartNode();
 
     State m_state = State::Stopped;
-    PeerServiceBase *m_peerService;
-    ChunkerServiceBase *m_chunkerService;
+    PeerServiceBase *m_peerService = nullptr;
+    ChunkerServiceBase *m_chunkerService = nullptr;
     PeerHandlerType m_taskSourceHandler;
 };

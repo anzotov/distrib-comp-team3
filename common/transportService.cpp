@@ -114,17 +114,11 @@ void TransportService::onDataReceived(const PeerHandlerType peerHandler, const Q
     {
         m_serializer->deserialize<Handshake, CalcTask, CalcResult>(m_encoder->decode(data),
                                                                    makeSafeHandler<Handshake>([&](std::unique_ptr<Handshake> object)
-                                                                                              {
-                                                                        auto obj = *object;
-                                                                        emit receivedHandshake(peerHandler, obj); }),
+                                                                                              { emit receivedHandshake(peerHandler, *object); }),
                                                                    makeSafeHandler<CalcTask>([&](std::unique_ptr<CalcTask> object)
-                                                                                             {
-                                                                        auto obj = *object;
-                                                                        emit receivedCalcTask(peerHandler, obj); }),
+                                                                                             { emit receivedCalcTask(peerHandler, *object); }),
                                                                    makeSafeHandler<CalcResult>([&](std::unique_ptr<CalcResult> object)
-                                                                                               {
-                                                                        auto obj = *object;
-                                                                        emit receivedCalcResult(peerHandler, obj); }));
+                                                                                               { emit receivedCalcResult(peerHandler, *object); }));
     }
     catch (DeserializationError &e)
     {

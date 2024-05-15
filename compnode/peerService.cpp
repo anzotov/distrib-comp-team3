@@ -40,7 +40,7 @@ void PeerService::start(const QString &compPower)
 
 void PeerService::stop()
 {
-    qDebug() << "PeerService: stop";
+    qDebug() << "PeerService: stop()";
     m_transportService->stopListening();
     m_discoveryService->stopListening();
     m_discoveryService->stopMulticast();
@@ -84,6 +84,7 @@ void PeerService::sendCalcResult(const PeerHandlerType &peerHandler, const CalcR
 
 QList<PeerInfo> PeerService::peers() const
 {
+    qDebug() << "PeerService: peers()";
     QList<PeerInfo> list;
     for (const auto &peer : m_uuidToRecordMap)
     {

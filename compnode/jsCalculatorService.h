@@ -3,7 +3,6 @@
 #include "calculatorServiceBase.h"
 
 #include <QJSEngine>
-#include <QAtomicInteger>
 
 class JsCalculatorService final : public CalculatorServiceBase
 {
@@ -14,5 +13,5 @@ public:
 
 private:
     QJSEngine m_jsEngine;
-    QAtomicInteger<bool> m_stop = true;
+    bool m_stop = true;
 };

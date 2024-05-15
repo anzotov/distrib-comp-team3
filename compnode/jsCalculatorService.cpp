@@ -7,6 +7,7 @@ using namespace std::literals;
 
 JsCalculatorService::JsCalculatorService(QObject *parent) : CalculatorServiceBase(parent)
 {
+    qDebug() << "JsCalculatorService()";
     m_jsEngine.globalObject().setProperty("sin", m_jsEngine.evaluate("f=function(x) { return Math.sin(x); }"));
     m_jsEngine.globalObject().setProperty("cos", m_jsEngine.evaluate("f=function(x) { return Math.cos(x); }"));
     m_jsEngine.globalObject().setProperty("tg", m_jsEngine.evaluate("f=function(x) { return Math.tan(x); }"));
@@ -15,6 +16,7 @@ JsCalculatorService::JsCalculatorService(QObject *parent) : CalculatorServiceBas
 
 void JsCalculatorService::calculate(const CalcTask &task)
 {
+    qDebug() << "JsCalculatorService: calculate()";
     m_stop = false;
     auto result = CalcResult();
     result.isMain = task.isMain;
@@ -36,5 +38,6 @@ void JsCalculatorService::calculate(const CalcTask &task)
 
 void JsCalculatorService::stop()
 {
+    qDebug() << "JsCalculatorService: stop()";
     m_stop = true;
 }

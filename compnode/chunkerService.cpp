@@ -150,14 +150,14 @@ void ChunkerService::OnCalculatorServiceCalcDone(CalcResult result)
     }
     if (m_state == State::ChunkTaskReceived)
     {
-        qInfo() << "Chunked task calculated";
+        qInfo() << "Chunked task calculation done";
         m_state = State::Ready;
         emit calcResult(m_taskSourceHandler, result);
         return;
     }
     if (m_state == State::MainTaskReceived)
     {
-        qInfo() << "My task chunk calculated";
+        qInfo() << "My chunk calculation done";
         m_result = result;
         checkChunkedResult();
     }
@@ -188,7 +188,7 @@ void ChunkerService::checkChunkedResult()
         if (!result.has_value())
             return;
     }
-    qInfo() << "ChunkerService: all chunks ready";
+    qInfo() << "All chunks ready";
     CalcResult result({}, true);
     for (const auto &peer : m_resultChunksOrder)
     {

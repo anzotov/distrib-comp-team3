@@ -13,8 +13,8 @@ struct DeserializationError final : std::logic_error
 template <class ArrayType, class IntermediateType>
 struct SerializerBase
 {
-
     virtual ~SerializerBase() = default;
+    
     template <class T>
     ArrayType serialize(const T &object) const
     {
@@ -32,6 +32,7 @@ protected:
     virtual ArrayType serialize_array(const IntermediateType &intermediate) const = 0;
     virtual IntermediateType deserialize_array(const ArrayType &array) const = 0;
 
+private:
     template <class T, class... Ts>
     void deserialize_inner(const IntermediateType &intermediate, std::function<void(T *)> handler, std::function<void(Ts *)>... handlers) const
     {

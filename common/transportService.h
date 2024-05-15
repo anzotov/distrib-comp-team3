@@ -34,8 +34,8 @@ private:
     void onConnectError(const QString peerInfo);
     void onDataReceived(const PeerHandlerType peerHandler, const QByteArray data);
 
-    TransportLayerBase *m_transportLayer;
-    SerializerBase<QByteArray, QJsonObject> *m_serializer;
-    EncoderBase<QByteArray> *m_encoder;
+    TransportLayerBase *m_transportLayer = nullptr;
+    SerializerBase<QByteArray, QJsonObject> *m_serializer = nullptr;
+    EncoderBase<QByteArray> *m_encoder = nullptr;
     QSet<PeerHandlerType> m_peers;
 };

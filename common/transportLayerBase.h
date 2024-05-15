@@ -12,7 +12,7 @@ class TransportLayerBase : public QObject
 public:
     using PeerHandlerType = QString;
     TransportLayerBase(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~TransportLayerBase() = default;
+    
 signals:
     void newConnection(const PeerHandlerType peerHandler, const QString peerInfo, bool outgoing);
     void connectionClosed(const PeerHandlerType peerHandler);

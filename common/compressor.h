@@ -12,5 +12,5 @@ public:
     QByteArray decode(const QByteArray &array) const override final;
 
 private:
-    int m_compressionLevel;
+    int m_compressionLevel = -1;
 };

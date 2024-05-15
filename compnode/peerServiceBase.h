@@ -11,7 +11,6 @@ class PeerServiceBase : public QObject
     Q_OBJECT
 public:
     PeerServiceBase(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~PeerServiceBase() = default;
 
 signals:
     void receivedCalcTask(const PeerHandlerType peerHandler, const CalcTask task);

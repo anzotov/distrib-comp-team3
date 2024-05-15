@@ -1,7 +1,7 @@
 #include <memory>
 
 template <class Type, class Functor>
-class SafeHandler
+class SafeHandler final
 {
 public:
     SafeHandler(Functor handler) : m_handler(handler) {}

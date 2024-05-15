@@ -10,7 +10,7 @@ class TaskProvider : public QObject
     Q_OBJECT
 public:
     TaskProvider(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~TaskProvider() = default;
+    
     virtual void loadNextTask() = 0;
     virtual void formatResult(const CalcResult &result) = 0;
 signals:

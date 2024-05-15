@@ -16,7 +16,7 @@ class TransportServiceBase : public QObject
 public:
     using PeerHandlerType = TransportLayerBase::PeerHandlerType;
     TransportServiceBase(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~TransportServiceBase() = default;
+    
 signals:
     void receivedHandshake(const PeerHandlerType peerHandler, const Handshake handshake);
     void receivedCalcTask(const PeerHandlerType peerHandler, const CalcTask task);

@@ -30,19 +30,21 @@ CompNode::~CompNode()
 
 void CompNode::start()
 {
-    qInfo() << "CompNode: start";
+    qDebug() << "CompNode: start()";
     if (m_state != State::Stopped)
         throw std::logic_error("CompNode: need to stop before starting again");
 
+    qInfo() << "Node is starting";
     m_state = State::Starting;
     m_chunkerService->start();
 }
 
 void CompNode::onChunkerServiceReady(const QString compPower)
 {
+    qDebug() << "CompNode: onChunkerServiceReady()";
     if (m_state == State::Starting)
     {
-        qInfo() << "CompNode: ChunkerService ready";
+        qInfo() << "Node is ready";
         m_state = State::Ready;
         m_peerService->start(compPower);
     }
@@ -50,23 +52,27 @@ void CompNode::onChunkerServiceReady(const QString compPower)
 
 void CompNode::onPeersChanged(const QList<PeerInfo> peers)
 {
-    qInfo() << "CompNode: peers changed";
+    qDebug() << "CompNode: onPeersChanged()";
+    qInfo() << "Peer list changed";
     m_chunkerService->updatePeers(peers);
 }
 
 void CompNode::onTaskNodeDisconnected(const PeerHandlerType peerHandler)
 {
+    qDebug() << QStringLiteral("CompNode: onTaskNodeDisconnected(%1)").arg(peerHandler);
     if (m_state == State::TaskReceived && peerHandler == m_taskSourceHandler)
     {
+        qCritical() << "Task node disconnected, calculation will not be completed";
         restartNode();
     }
 }
 
 void CompNode::onReceivedCalcTask(const PeerHandlerType peerHandler, const CalcTask task)
 {
+    qDebug() << QStringLiteral("CompNode: onReceivedCalcTask(%1)").arg(peerHandler);
     if (m_state == State::Ready)
     {
-        qInfo() << "CompNode: Received CalcTask";
+        qInfo() << "Task is received";
         m_state = State::TaskReceived;
         m_taskSourceHandler = peerHandler;
         m_chunkerService->calculateTask(peerHandler, task);
@@ -75,27 +81,30 @@ void CompNode::onReceivedCalcTask(const PeerHandlerType peerHandler, const CalcT
 
 void CompNode::onChunkerServiceSendChunkedTask(const PeerHandlerType peerHandler, const CalcTask task)
 {
+    qDebug() << QStringLiteral("CompNode: onChunkerServiceSendChunkedTask(%1)").arg(peerHandler);
     if (m_state == State::TaskReceived)
     {
-        qInfo() << "CompNode: Sending CalcTask to peers";
+        qInfo() << "Sending chunked task to peer";
         m_peerService->sendCalcTask(peerHandler, task);
     }
 }
 
 void CompNode::onReceivedCalcResult(const PeerHandlerType peerHandler, const CalcResult result)
 {
+    qDebug() << QStringLiteral("CompNode: onReceivedCalcResult(%1)").arg(peerHandler);
     if (m_state == State::TaskReceived)
     {
-        qInfo() << "CompNode: CalcResult received from peer";
+        qInfo() << "Task result is received from peer";
         m_chunkerService->processChunkedResult(peerHandler, result);
     }
 }
 
 void CompNode::onChunkerServiceCalcResult(const PeerHandlerType peerHandler, const CalcResult result)
 {
+    qDebug() << QStringLiteral("CompNode: onChunkerServiceCalcResult(%1)").arg(peerHandler);
     if (m_state == State::TaskReceived)
     {
-        qInfo() << "CompNode: CalcResult received from ChunkerService";
+        qInfo() << "Sending task result to peer";
         m_state = State::Ready;
         m_peerService->sendCalcResult(peerHandler, result);
     }
@@ -103,16 +112,18 @@ void CompNode::onChunkerServiceCalcResult(const PeerHandlerType peerHandler, con
 
 void CompNode::onChunkerServiceCalcError()
 {
+    qDebug() << "CompNode: onChunkerServiceCalcError()";
     if (m_state == State::TaskReceived)
     {
-        qInfo() << "CompNode: Error received from ChunkerService";
+        qCritical() << "Task calculation error";
         restartNode();
     }
 }
 
 void CompNode::stop()
 {
-    qInfo() << "CompNode: stop";
+    qDebug() << "CompNode: stop()";
+    qInfo() << "Node is stopping";
     m_state = State::Stopped;
     m_chunkerService->stop();
     m_peerService->stop();
@@ -121,6 +132,8 @@ void CompNode::stop()
 
 void CompNode::restartNode()
 {
+    qDebug() << "CompNode: restartNode()";
+    qCritical() << "Restarting node";
     m_state = State::Starting;
     m_chunkerService->stop();
     m_peerService->stop();

@@ -11,7 +11,6 @@ class ChunkerServiceBase : public QObject
     Q_OBJECT
 public:
     ChunkerServiceBase(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~ChunkerServiceBase() = default;
 
 signals:
     void ready(const QString compPower);

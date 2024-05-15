@@ -9,8 +9,7 @@ class CalculatorServiceBase : public QObject
 {
     Q_OBJECT
 public:
-    explicit CalculatorServiceBase(QObject *parent) : QObject(parent) {}
-    virtual ~CalculatorServiceBase() = default;
+    CalculatorServiceBase(QObject *parent) : QObject(parent) {}
 
 signals:
     void calcDone(CalcResult result);
