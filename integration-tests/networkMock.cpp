@@ -46,8 +46,8 @@ struct TransportLayerMock final : TransportLayerBase
             auto &peer = m_networkMock->m_peerInfoToTransportMap[peerInfo];
             if (peer->m_listening)
             {
-                auto localHandler = QString().setNum(m_nextHandler++);
-                auto remoteHandler = QString().setNum((peer->m_nextHandler)++);
+                auto localHandler = QString::number(m_nextHandler++);
+                auto remoteHandler = QString::number((peer->m_nextHandler)++);
                 m_handlerToMockMap.insert(localHandler, peer);
                 m_localToRemoteHandlerMap.insert(localHandler, remoteHandler);
                 peer->m_handlerToMockMap.insert(remoteHandler, this);

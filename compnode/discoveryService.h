@@ -38,5 +38,5 @@ private:
     QMap<QString, DiscoveryData> m_peers;
     bool m_listen = false;
     int m_peersForgetPeriod = 0;
-    unsigned int m_periodCounter = 0;
+    int m_periodCounter = 0;
 };

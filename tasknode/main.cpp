@@ -1,10 +1,13 @@
 #include "../common/logMessageHandler.h"
 #include "tasknode.h"
+#include "fileTaskProvider.h"
+#include "../common/transportService.h"
+#include "../common/jsonSerializer.h"
+#include "../common/compressor.h"
 
 #include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QStringList>
-#include <QtGlobal>
 
 int main(int argc, char *argv[])
 {
@@ -48,14 +51,21 @@ int main(int argc, char *argv[])
     {
         qFatal("Укажите значение для опции -o");
     }
-    auto split = args.at(0).split(':');
+    auto peerInfo = args.at(0);
+    auto split = peerInfo.split(':');
     if (split.length() != 2 || split[0].isEmpty() || split[1].isEmpty())
     {
         qFatal("Укажите один позиционный аргумент: <ip>:<port>");
     }
 
-    TaskNode taskNode(&app, split[0], split[1], input, output);
-    QObject::connect(&taskNode, &TaskNode::taskDone, &app, [&app](bool success)
+    // TODO: Вписать сюда конструктор TransportLayer
+    TransportLayerBase *transportLayer = nullptr;
+    auto transportService = new TransportService(transportLayer,
+                                                 new JsonSerializer,
+                                                 new Compressor);
+    auto fileTaskProvider = new FileTaskProvider(input, output);
+    TaskNode taskNode(transportService, fileTaskProvider, peerInfo);
+    QObject::connect(&taskNode, &TaskNode::stopped, &app, [&app](bool success)
                      { app.exit(success ? 0 : 1); });
 
     return app.exec();

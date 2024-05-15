@@ -12,8 +12,38 @@ QtApplication {
     consoleApplication: true
     files: [
         "main.cpp",
-        "calculatorService.h",
-        "calculatorService.cpp",
+        "peerServiceBase.h",
+        "peerService.h",
+        "peerService.cpp",
+        "chunkerService.h",
+        "chunkerService.cpp",
+        "chunkerServiceBase.h",
+        "compnode.h",
+        "compnode.cpp",
+        "calculatorServiceBase.h",
+        "jsCalculatorService.h",
+        "jsCalculatorService.cpp",
+        "discoveryData.h",
+        "discoveryData.cpp",
+        "discoveryServiceBase.h",
+        "discoveryService.h",
+        "discoveryService.cpp",
+        "../common/logMessageHandler.cpp",
+        "../common/transportService.h",
+        "../common/transportService.cpp",
+        "../common/transportServiceBase.h",
+        "../common/calcResult.cpp",
+        "../common/calcTask.cpp",
+        "../common/handshake.cpp",
+        "../common/jsonSerializer.h",
+        "../common/jsonSerializer.cpp",
+        "../common/serializerBase.h",
+        "../common/encoderBase.h",
+        "../common/compressor.h",
+        "../common/compressor.cpp",
+        "../common/transportLayerBase.h",
+        "../common/transportLayer.h",
+        // "../common/transportLayer.cpp",
     ]
 
     Group {     // Properties for the produced executable
@@ -23,4 +53,5 @@ QtApplication {
     }
 
     Depends { name: "Qt.qml" }
+    Depends { name: "Qt.network" }
 }
