@@ -32,7 +32,7 @@ QtApplication {
         "../common/compressor.cpp",
         "../common/transportLayerBase.h",
         "../common/transportLayer.h",
-        // "../common/transportLayer.cpp",
+        "../common/transportLayer.cpp",
     ]
 
     Group {     // Properties for the produced executable

@@ -43,15 +43,20 @@ QtApplication {
         "../common/compressor.cpp",
         "../common/transportLayerBase.h",
         "../common/transportLayer.h",
-        // "../common/transportLayer.cpp",
+        "../common/transportLayer.cpp"
     ]
 
-    Group {     // Properties for the produced executable
+    Group {
+        // Properties for the produced executable
         fileTagsFilter: "application"
         qbs.install: true
         qbs.installDir: "bin"
     }
 
-    Depends { name: "Qt.qml" }
-    Depends { name: "Qt.network" }
+    Depends {
+        name: "Qt.qml"
+    }
+    Depends {
+        name: "Qt.network"
+    }
 }

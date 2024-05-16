@@ -1,6 +1,7 @@
 #include "../common/logMessageHandler.h"
 #include "tasknode.h"
 #include "fileTaskProvider.h"
+#include "../common/transportLayer.h"
 #include "../common/transportService.h"
 #include "../common/jsonSerializer.h"
 #include "../common/compressor.h"
@@ -58,8 +59,7 @@ int main(int argc, char *argv[])
         qFatal("Укажите один позиционный аргумент: <ip>:<port>");
     }
 
-    // TODO: Вписать сюда конструктор TransportLayer
-    TransportLayerBase *transportLayer = nullptr;
+    TransportLayer *transportLayer = new TransportLayer(0);
     auto transportService = new TransportService(transportLayer,
                                                  new JsonSerializer,
                                                  new Compressor);
@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
     TaskNode taskNode(transportService, fileTaskProvider, peerInfo);
     QObject::connect(&taskNode, &TaskNode::stopped, &app, [&app](bool success)
                      { app.exit(success ? 0 : 1); });
+
 
     return app.exec();
 }
