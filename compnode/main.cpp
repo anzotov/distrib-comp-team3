@@ -4,6 +4,7 @@
 #include "discoveryService.h"
 #include "chunkerService.h"
 #include "jsCalculatorService.h"
+#include "../common/transportLayer.h"
 #include "../common/transportService.h"
 #include "../common/jsonSerializer.h"
 #include "../common/compressor.h"
@@ -54,12 +55,10 @@ int main(int argc, char *argv[])
     }
     quint16 tcpPortValue = tcpPort.toUInt();
 
-    // TODO: Вписать сюда конструктор TransportLayer, использующий tcpPortValue в качестве порта для прослушивания
-    TransportLayerBase *transportLayer = nullptr;
+    TransportLayer *transportLayer = new TransportLayer(tcpPortValue);
     if (tcpPortValue == 0)
     {
-        // TODO: Сделать функцию, возвращающую QTcpServer::serverPort(), раскомментировать следующую строку
-        // tcpPortValue = transportLayer.getPort();
+        tcpPortValue = transportLayer->getPort();
     }
 
     QStringList connectInfo;
